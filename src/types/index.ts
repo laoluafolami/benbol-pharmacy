@@ -48,5 +48,7 @@ export interface ChatMessage {
   session_id: string;
   message: string;
   sender: 'user' | 'bot';
+  user_name?: string;
+  user_email?: string;
   created_at?: string;
 }

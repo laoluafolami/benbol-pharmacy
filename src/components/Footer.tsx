@@ -17,6 +17,12 @@ export default function Footer({ onNavigate }: FooterProps) {
     setMessage('');
 
     try {
+      if (!email.trim()) {
+        setMessage('Please enter a valid email address.');
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('newsletter_subscribers')
         .insert([{ email, full_name: '' }]);
@@ -25,13 +31,15 @@ export default function Footer({ onNavigate }: FooterProps) {
         if (error.code === '23505') {
           setMessage('You are already subscribed!');
         } else {
-          throw error;
+          console.error('Supabase error:', error);
+          setMessage('Failed to subscribe. Please try again later.');
         }
       } else {
         setMessage('Successfully subscribed to our newsletter!');
         setEmail('');
       }
     } catch (error) {
+      console.error('Newsletter error:', error);
       setMessage('Failed to subscribe. Please try again.');
     } finally {
       setLoading(false);

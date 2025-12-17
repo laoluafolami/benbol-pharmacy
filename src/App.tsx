@@ -10,6 +10,8 @@ import BlogPage from './pages/BlogPage';
 import FAQPage from './pages/FAQPage';
 import RefillFormPage from './pages/RefillFormPage';
 import AppointmentFormPage from './pages/AppointmentFormPage';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsersPage from './pages/AdminUsersPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -37,17 +39,23 @@ function App() {
         return <RefillFormPage onNavigate={handleNavigate} />;
       case 'appointment':
         return <AppointmentFormPage onNavigate={handleNavigate} />;
+      case 'admin':
+        return <AdminDashboard onNavigateToUsers={() => setCurrentPage('admin-users')} />;
+      case 'admin-users':
+        return <AdminUsersPage onNavigateBack={() => setCurrentPage('admin')} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
   };
 
+  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users';
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
-      <Header currentPage={currentPage} onNavigate={handleNavigate} />
+      {!isAdminPage && <Header currentPage={currentPage} onNavigate={handleNavigate} />}
       <main>{renderPage()}</main>
-      <Footer onNavigate={handleNavigate} />
-      <Chatbot />
+      {!isAdminPage && <Footer onNavigate={handleNavigate} />}
+      {!isAdminPage && <Chatbot onNavigate={handleNavigate} />}
     </div>
   );
 }

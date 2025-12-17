@@ -1,6 +1,11 @@
-import { BookOpen, Calendar, ArrowRight } from 'lucide-react';
+import { Calendar, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 export default function BlogPage() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
   const articles = [
     {
       title: 'Understanding Your Prescription Medications',
@@ -87,6 +92,41 @@ export default function BlogPage() {
 
   const categories = ['All', 'Medication Safety', 'Health Tips', 'Wellness', 'Disease Management', 'Skincare'];
 
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+
+    try {
+      if (!email.trim()) {
+        setMessage('Please enter a valid email address.');
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .insert([{ email, full_name: '' }]);
+
+      if (error) {
+        if (error.code === '23505') {
+          setMessage('You are already subscribed!');
+        } else {
+          console.error('Supabase error:', error);
+          setMessage('Failed to subscribe. Please try again later.');
+        }
+      } else {
+        setMessage('Successfully subscribed to our newsletter!');
+        setEmail('');
+      }
+    } catch (error) {
+      console.error('Newsletter error:', error);
+      setMessage('Failed to subscribe. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <section className="bg-gradient-to-br from-teal-50 to-blue-50 py-20">
@@ -164,19 +204,28 @@ export default function BlogPage() {
               Subscribe to our newsletter to receive the latest health tips and pharmacy updates directly in your
               inbox.
             </p>
-            <form className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto">
+            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto">
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"
+                required
                 className="flex-1 px-6 py-4 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
               <button
                 type="submit"
-                className="bg-teal-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-teal-700 transition-colors whitespace-nowrap"
+                disabled={loading}
+                className="bg-teal-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-teal-700 transition-colors whitespace-nowrap disabled:opacity-50"
               >
-                Subscribe
+                {loading ? 'Subscribing...' : 'Subscribe'}
               </button>
             </form>
+            {message && (
+              <p className={`text-center mt-4 text-sm ${message.includes('Success') ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                {message}
+              </p>
+            )}
           </div>
         </div>
       </section>

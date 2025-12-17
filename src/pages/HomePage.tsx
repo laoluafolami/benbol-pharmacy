@@ -156,14 +156,18 @@ export default function HomePage({ onNavigate }: HomePageProps) {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <button
-                  onClick={() => onNavigate('appointment')}
+                  onClick={() => {
+                    onNavigate('appointment');
+                  }}
                   className="group bg-white text-teal-700 px-8 py-4 rounded-xl font-bold text-lg hover:bg-yellow-300 transition-all hover:scale-105 shadow-2xl flex items-center justify-center space-x-2"
                 >
                   <span>Book Consultation</span>
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button
-                  onClick={() => onNavigate('refill')}
+                  onClick={() => {
+                    onNavigate('refill');
+                  }}
                   className="bg-white/10 backdrop-blur-sm border-2 border-white text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white hover:text-teal-700 transition-all hover:scale-105 shadow-2xl"
                 >
                   Refill Prescription

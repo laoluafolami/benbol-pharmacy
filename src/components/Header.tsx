@@ -38,11 +38,19 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
                 <span className="sm:hidden">Open Daily</span>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Phone className="w-4 h-4" />
-              <a href="tel:09167858304" className="font-semibold hover:text-yellow-300 transition-colors">
-                09167858304
-              </a>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Phone className="w-4 h-4" />
+                <a href="tel:09167858304" className="font-semibold hover:text-yellow-300 transition-colors">
+                  09167858304
+                </a>
+              </div>
+              <button
+                onClick={() => handleNavigate('admin')}
+                className="bg-white text-teal-600 px-4 py-1 rounded-lg font-semibold hover:bg-yellow-300 transition-colors text-xs sm:text-sm"
+              >
+                Log in
+              </button>
             </div>
           </div>
         </div>
