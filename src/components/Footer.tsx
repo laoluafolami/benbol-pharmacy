@@ -47,7 +47,7 @@ export default function Footer({ onNavigate }: FooterProps) {
               <img
                 src="/image.png"
                 alt="Benbol Global Services Ltd"
-                className="h-16 w-auto brightness-110"
+                className="h-20 w-auto brightness-110"
               />
             </div>
             <p className="text-sm mb-4">
