@@ -60,7 +60,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
               <img
                 src="/image.png"
                 alt="Benbol Global Services Ltd"
-                className="h-14 w-auto transition-transform group-hover:scale-105"
+                className="h-20 w-auto transition-transform group-hover:scale-105"
               />
               <div className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-teal-600 to-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform rounded-full"></div>
             </div>
