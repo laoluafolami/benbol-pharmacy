@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Download, Trash2, LogOut, Mail, MessageSquare, Users } from 'lucide-react';
+import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Papa from 'papaparse';
@@ -34,6 +34,30 @@ interface ChatMessage {
   created_at: string;
 }
 
+interface Appointment {
+  id: number;
+  full_name: string;
+  email: string;
+  phone: string;
+  service_type: string;
+  preferred_date: string;
+  preferred_time: string;
+  message: string;
+  created_at: string;
+}
+
+interface PrescriptionRefill {
+  id: number;
+  full_name: string;
+  email: string;
+  phone: string;
+  prescription_number: string;
+  medication_name: string;
+  prescribing_doctor: string;
+  additional_notes: string;
+  created_at: string;
+}
+
 interface AdminDashboardProps {
   onNavigateToUsers: () => void;
 }
@@ -43,10 +67,14 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [refills, setRefills] = useState<PrescriptionRefill[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [expandedMessageId, setExpandedMessageId] = useState<number | null>(null);
   const [expandedContactId, setExpandedContactId] = useState<number | null>(null);
+  const [expandedAppointmentId, setExpandedAppointmentId] = useState<number | null>(null);
+  const [expandedRefillId, setExpandedRefillId] = useState<number | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<'admin' | 'manager' | 'viewer' | null>(null);
 
@@ -110,6 +138,12 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
       } else if (activeTab === 'messages') {
         const { data } = await supabase.from('chat_messages').select('*').order('created_at', { ascending: false });
         setMessages(data || []);
+      } else if (activeTab === 'appointments') {
+        const { data } = await supabase.from('appointments').select('*').order('created_at', { ascending: false });
+        setAppointments(data || []);
+      } else if (activeTab === 'refills') {
+        const { data } = await supabase.from('prescription_refills').select('*').order('created_at', { ascending: false });
+        setRefills(data || []);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -150,8 +184,6 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
   const exportToPDF = (data: any[], filename: string) => {
     try {
       const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
       let yPosition = 20;
 
       doc.setFontSize(16);
@@ -178,33 +210,53 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
         })
       );
 
-      (doc as any).autoTable({
-        head: [columns.map(col => col.charAt(0).toUpperCase() + col.slice(1).replace(/_/g, ' '))],
-        body: rows,
-        startY: yPosition,
-        margin: 10,
-        styles: {
-          fontSize: 9,
-          cellPadding: 3,
-        },
-        headStyles: {
-          fillColor: [20, 184, 166], // teal-600
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-        },
-        alternateRowStyles: {
-          fillColor: [240, 253, 250], // teal-50
-        },
-        didDrawPage: () => {
-          const pageCount = (doc as any).internal.getPages().length;
-          doc.setFontSize(8);
+      // Use autoTable if available
+      if ((doc as any).autoTable) {
+        (doc as any).autoTable({
+          head: [columns.map(col => col.charAt(0).toUpperCase() + col.slice(1).replace(/_/g, ' '))],
+          body: rows,
+          startY: yPosition,
+          margin: 10,
+          styles: {
+            fontSize: 9,
+            cellPadding: 3,
+          },
+          headStyles: {
+            fillColor: [20, 184, 166], // teal-600
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+          },
+          alternateRowStyles: {
+            fillColor: [240, 253, 250], // teal-50
+          },
+        });
+      } else {
+        // Fallback: simple text-based table
+        doc.setFontSize(9);
+        const columnWidth = (doc.internal.pageSize.getWidth() - 40) / columns.length;
+        
+        // Header
+        columns.forEach((col, idx) => {
           doc.text(
-            `Page ${pageCount}`,
-            pageWidth - 20,
-            pageHeight - 10
+            col.charAt(0).toUpperCase() + col.slice(1).replace(/_/g, ' '),
+            20 + idx * columnWidth,
+            yPosition
           );
-        },
-      });
+        });
+        yPosition += 7;
+        
+        // Rows
+        rows.forEach(row => {
+          row.forEach((cell, idx) => {
+            doc.text(String(cell).substring(0, 30), 20 + idx * columnWidth, yPosition);
+          });
+          yPosition += 7;
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      }
 
       doc.save(`${filename}_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
@@ -255,6 +307,8 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
           <div className="flex space-x-8 overflow-x-auto">
             {[
               { id: 'contacts', label: 'Contact Submissions', icon: Mail, count: contacts.length },
+              { id: 'appointments', label: 'Appointments', icon: Calendar, count: appointments.length },
+              { id: 'refills', label: 'Prescription Refills', icon: Pill, count: refills.length },
               { id: 'subscribers', label: 'Newsletter Subscribers', icon: Mail, count: subscribers.length },
               { id: 'messages', label: 'Chat Messages', icon: MessageSquare, count: messages.length },
             ].map((tab) => {
@@ -302,6 +356,42 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                   </button>
                   <button
                     onClick={() => exportToPDF(contacts, 'Contact Submissions')}
+                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Export PDF</span>
+                  </button>
+                </>
+              )}
+              {activeTab === 'appointments' && appointments.length > 0 && (
+                <>
+                  <button
+                    onClick={() => exportToCSV(appointments, 'appointments')}
+                    className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Export CSV</span>
+                  </button>
+                  <button
+                    onClick={() => exportToPDF(appointments, 'Appointments')}
+                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Export PDF</span>
+                  </button>
+                </>
+              )}
+              {activeTab === 'refills' && refills.length > 0 && (
+                <>
+                  <button
+                    onClick={() => exportToCSV(refills, 'prescription_refills')}
+                    className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Export CSV</span>
+                  </button>
+                  <button
+                    onClick={() => exportToPDF(refills, 'Prescription Refills')}
                     className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Download className="w-5 h-5" />
@@ -514,6 +604,140 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                               {canDelete() ? (
                                 <button
                                   onClick={() => deleteRecord('chat_messages', msg.id)}
+                                  className="text-red-600 hover:text-red-800 dark:hover:text-red-400 transition-colors"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-600">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Appointments Table */}
+            {activeTab === 'appointments' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                {appointments.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                    <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No appointments yet</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Email</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Phone</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Service Type</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Preferred Date</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Preferred Time</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Message</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Date</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {appointments.map((appointment, index) => (
+                          <tr key={appointment.id} className={`hover:bg-opacity-75 transition-colors ${
+                            index % 2 === 0 
+                              ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
+                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                          }`}>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">{appointment.full_name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{appointment.email}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{appointment.phone}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{appointment.service_type}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{new Date(appointment.preferred_date).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{appointment.preferred_time}</td>
+                            <td className={`px-6 py-4 text-sm text-gray-600 dark:text-gray-400 ${expandedAppointmentId === appointment.id ? 'max-w-none' : 'max-w-xs'}`}>
+                              <button
+                                onClick={() => setExpandedAppointmentId(expandedAppointmentId === appointment.id ? null : appointment.id)}
+                                className={`text-left hover:text-teal-600 dark:hover:text-teal-400 transition-colors ${expandedAppointmentId === appointment.id ? 'whitespace-normal break-words' : 'truncate'}`}
+                              >
+                                {expandedAppointmentId === appointment.id ? appointment.message : appointment.message.substring(0, 50) + (appointment.message.length > 50 ? '...' : '')}
+                              </button>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{new Date(appointment.created_at).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 text-sm">
+                              {canDelete() ? (
+                                <button
+                                  onClick={() => deleteRecord('appointments', appointment.id)}
+                                  className="text-red-600 hover:text-red-800 dark:hover:text-red-400 transition-colors"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-600">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Prescription Refills Table */}
+            {activeTab === 'refills' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                {refills.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                    <Pill className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No prescription refills yet</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Email</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Phone</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Prescription #</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Medication</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Doctor</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Notes</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Date</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {refills.map((refill, index) => (
+                          <tr key={refill.id} className={`hover:bg-opacity-75 transition-colors ${
+                            index % 2 === 0 
+                              ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
+                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                          }`}>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">{refill.full_name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{refill.email}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{refill.phone}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{refill.prescription_number || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{refill.medication_name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{refill.prescribing_doctor || '-'}</td>
+                            <td className={`px-6 py-4 text-sm text-gray-600 dark:text-gray-400 ${expandedRefillId === refill.id ? 'max-w-none' : 'max-w-xs'}`}>
+                              <button
+                                onClick={() => setExpandedRefillId(expandedRefillId === refill.id ? null : refill.id)}
+                                className={`text-left hover:text-teal-600 dark:hover:text-teal-400 transition-colors ${expandedRefillId === refill.id ? 'whitespace-normal break-words' : 'truncate'}`}
+                              >
+                                {expandedRefillId === refill.id ? refill.additional_notes : refill.additional_notes.substring(0, 50) + (refill.additional_notes.length > 50 ? '...' : '')}
+                              </button>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{new Date(refill.created_at).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 text-sm">
+                              {canDelete() ? (
+                                <button
+                                  onClick={() => deleteRecord('prescription_refills', refill.id)}
                                   className="text-red-600 hover:text-red-800 dark:hover:text-red-400 transition-colors"
                                 >
                                   <Trash2 className="w-5 h-5" />

@@ -85,10 +85,10 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Email</h3>
                     <a
-                      href="mailto:info@benbolpharmacy.com"
+                      href="mailto:benbolglobal@gmail.com"
                       className="text-teal-600 hover:text-teal-700 font-medium"
                     >
-                      info@benbolpharmacy.com
+                      benbolglobal@gmail.com
                     </a>
                     <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">We'll respond within 24 hours</p>
                   </div>
@@ -100,9 +100,11 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Location</h3>
+                    <p className="text-gray-700 dark:text-gray-300">Benbol Pharmacy</p>
                     <p className="text-gray-700 dark:text-gray-300">Vickie's Plaza, Lekki-Epe Expressway</p>
-                    <p className="text-gray-700 dark:text-gray-300">Opposite Crown Estate, Sangotedo</p>
-                    <p className="text-gray-700 dark:text-gray-300">Lagos State</p>
+                    <p className="text-gray-700 dark:text-gray-300">Sun View 2nd gate Bus stop</p>
+                    <p className="text-gray-700 dark:text-gray-300">Opposite Peace Garden & Crown Estates</p>
+                    <p className="text-gray-700 dark:text-gray-300">Sangotedo, Lagos</p>
                     <a href="#" className="text-teal-600 hover:text-teal-700 text-sm mt-2 inline-block">
                       Get Directions →
                     </a>
@@ -286,7 +288,7 @@ export default function ContactPage() {
               ></iframe>
             </div>
             <p className="text-center text-gray-600 dark:text-gray-300 mt-4">
-              Vickie's Plaza, Lekki-Epe Expressway, Opposite Crown Estate, Sangotedo, Lagos State
+              Benbol Pharmacy, Vickie's Plaza, Lekki-Epe Expressway, Sun View 2nd gate Bus stop, Opposite Peace Garden & Crown Estates, Sangotedo, Lagos
             </p>
           </div>
         </div>
