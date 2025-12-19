@@ -12,6 +12,9 @@ import RefillFormPage from './pages/RefillFormPage';
 import AppointmentFormPage from './pages/AppointmentFormPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsersPage from './pages/AdminUsersPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
+import TermsOfUsePage from './pages/TermsOfUsePage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -39,6 +42,12 @@ function App() {
         return <RefillFormPage onNavigate={handleNavigate} />;
       case 'appointment':
         return <AppointmentFormPage onNavigate={handleNavigate} />;
+      case 'privacy':
+        return <PrivacyPolicyPage />;
+      case 'cookies':
+        return <CookiePolicyPage />;
+      case 'terms':
+        return <TermsOfUsePage />;
       case 'admin':
         return <AdminDashboard onNavigateToUsers={() => setCurrentPage('admin-users')} />;
       case 'admin-users':

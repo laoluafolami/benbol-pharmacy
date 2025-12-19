@@ -13,7 +13,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
 
   const navItems = [
     { name: 'Home', id: 'home' },
-    { name: 'About', id: 'about' },
+    { name: 'About Us', id: 'about' },
     { name: 'Services', id: 'services' },
     { name: 'Health Resources', id: 'blog' },
     { name: 'FAQ', id: 'faq' },
