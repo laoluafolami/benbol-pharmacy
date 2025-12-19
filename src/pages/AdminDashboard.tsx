@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Download, Trash2, LogOut, Mail, MessageSquare, Users } from 'lucide-react';
+import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Papa from 'papaparse';
@@ -15,6 +15,9 @@ interface ContactSubmission {
   subject: string;
   message: string;
   created_at: string;
+  is_read?: boolean;
+  is_archived?: boolean;
+  status?: string;
 }
 
 interface NewsletterSubscriber {
@@ -22,6 +25,8 @@ interface NewsletterSubscriber {
   email: string;
   full_name: string;
   created_at: string;
+  is_read?: boolean;
+  is_archived?: boolean;
 }
 
 interface ChatMessage {
@@ -32,6 +37,38 @@ interface ChatMessage {
   user_name?: string;
   user_email?: string;
   created_at: string;
+  is_read?: boolean;
+  is_archived?: boolean;
+}
+
+interface Appointment {
+  id: number;
+  full_name: string;
+  email: string;
+  phone: string;
+  service_type: string;
+  preferred_date: string;
+  preferred_time: string;
+  message: string;
+  created_at: string;
+  is_read?: boolean;
+  is_archived?: boolean;
+  status?: string;
+}
+
+interface PrescriptionRefill {
+  id: number;
+  full_name: string;
+  email: string;
+  phone: string;
+  prescription_number: string;
+  medication_name: string;
+  prescribing_doctor: string;
+  additional_notes: string;
+  created_at: string;
+  is_read?: boolean;
+  is_archived?: boolean;
+  status?: string;
 }
 
 interface AdminDashboardProps {
@@ -43,12 +80,18 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [refills, setRefills] = useState<PrescriptionRefill[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [expandedMessageId, setExpandedMessageId] = useState<number | null>(null);
   const [expandedContactId, setExpandedContactId] = useState<number | null>(null);
+  const [expandedAppointmentId, setExpandedAppointmentId] = useState<number | null>(null);
+  const [expandedRefillId, setExpandedRefillId] = useState<number | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<'admin' | 'manager' | 'viewer' | null>(null);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -94,34 +137,124 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
 
   useEffect(() => {
     if (isAuthenticated) {
+      fetchAllData();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab) {
       fetchData();
     }
-  }, [isAuthenticated, activeTab]);
+  }, [activeTab]);
 
-  const fetchData = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     try {
-      if (activeTab === 'contacts') {
-        const { data } = await supabase.from('contact_submissions').select('*').order('created_at', { ascending: false });
-        setContacts(data || []);
-      } else if (activeTab === 'subscribers') {
-        const { data } = await supabase.from('newsletter_subscribers').select('*').order('created_at', { ascending: false });
-        setSubscribers(data || []);
-      } else if (activeTab === 'messages') {
-        const { data } = await supabase.from('chat_messages').select('*').order('created_at', { ascending: false });
-        setMessages(data || []);
-      }
+      // Fetch all data in parallel for counts
+      const [contactsRes, subscribersRes, messagesRes, appointmentsRes, refillsRes] = await Promise.all([
+        supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }),
+        supabase.from('newsletter_subscribers').select('*').order('created_at', { ascending: false }),
+        supabase.from('chat_messages').select('*').order('created_at', { ascending: false }),
+        supabase.from('appointments').select('*').order('created_at', { ascending: false }),
+        supabase.from('prescription_refills').select('*').order('created_at', { ascending: false }),
+      ]);
+
+      setContacts(contactsRes.data || []);
+      setSubscribers(subscribersRes.data || []);
+      setMessages(messagesRes.data || []);
+      setAppointments(appointmentsRes.data || []);
+      setRefills(refillsRes.data || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching all data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchData = async () => {
+    // Data is already loaded, no need to fetch again
+    // This function is kept for compatibility but doesn't do anything
+    // since all data is loaded on mount
   };
 
   const canDelete = () => {
     const hasPermission = userRole === 'admin' || userRole === 'manager';
     console.log('canDelete check - userRole:', userRole, 'hasPermission:', hasPermission);
     return hasPermission;
+  };
+
+  // Status management functions
+  const toggleReadStatus = async (table: string, id: number, currentStatus?: boolean) => {
+    try {
+      await supabase
+        .from(table)
+        .update({ is_read: !currentStatus })
+        .eq('id', id);
+      fetchAllData();
+    } catch (error) {
+      console.error('Error toggling read status:', error);
+    }
+  };
+
+  const toggleArchiveStatus = async (table: string, id: number, currentStatus?: boolean) => {
+    try {
+      await supabase
+        .from(table)
+        .update({ is_archived: !currentStatus })
+        .eq('id', id);
+      fetchAllData();
+    } catch (error) {
+      console.error('Error toggling archive status:', error);
+    }
+  };
+
+  const updateStatus = async (table: string, id: number, newStatus: string) => {
+    try {
+      await supabase
+        .from(table)
+        .update({ status: newStatus })
+        .eq('id', id);
+      fetchAllData();
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const getFilteredData = <T extends { is_read?: boolean; is_archived?: boolean }>(data: T[]): T[] => {
+    let filtered = [...data];
+    
+    if (showUnreadOnly) {
+      filtered = filtered.filter(item => !item.is_read);
+    }
+    
+    if (!showArchived) {
+      filtered = filtered.filter(item => !item.is_archived);
+    } else {
+      filtered = filtered.filter(item => item.is_archived);
+    }
+    
+    return filtered;
+  };
+
+  const getStatusBadgeColor = (status?: string) => {
+    switch (status) {
+      case 'new':
+        return 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300';
+      case 'pending':
+        return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300';
+      case 'in-progress':
+        return 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300';
+      case 'completed':
+        return 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300';
+      case 'cancelled':
+        return 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300';
+      default:
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
+    }
+  };
+
+  const getUnreadCount = <T extends { is_read?: boolean; is_archived?: boolean }>(data: T[]): number => {
+    return data.filter(item => !item.is_read && !item.is_archived).length;
   };
 
   const deleteRecord = async (table: string, id: number) => {
@@ -133,7 +266,7 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
     if (!confirm('Are you sure you want to delete this record?')) return;
     try {
       await supabase.from(table).delete().eq('id', id);
-      fetchData();
+      fetchAllData(); // Refresh all data after deletion
     } catch (error) {
       console.error('Error deleting record:', error);
     }
@@ -150,8 +283,6 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
   const exportToPDF = (data: any[], filename: string) => {
     try {
       const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
       let yPosition = 20;
 
       doc.setFontSize(16);
@@ -178,33 +309,53 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
         })
       );
 
-      (doc as any).autoTable({
-        head: [columns.map(col => col.charAt(0).toUpperCase() + col.slice(1).replace(/_/g, ' '))],
-        body: rows,
-        startY: yPosition,
-        margin: 10,
-        styles: {
-          fontSize: 9,
-          cellPadding: 3,
-        },
-        headStyles: {
-          fillColor: [20, 184, 166], // teal-600
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-        },
-        alternateRowStyles: {
-          fillColor: [240, 253, 250], // teal-50
-        },
-        didDrawPage: () => {
-          const pageCount = (doc as any).internal.getPages().length;
-          doc.setFontSize(8);
+      // Use autoTable if available
+      if ((doc as any).autoTable) {
+        (doc as any).autoTable({
+          head: [columns.map(col => col.charAt(0).toUpperCase() + col.slice(1).replace(/_/g, ' '))],
+          body: rows,
+          startY: yPosition,
+          margin: 10,
+          styles: {
+            fontSize: 9,
+            cellPadding: 3,
+          },
+          headStyles: {
+            fillColor: [20, 184, 166], // teal-600
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+          },
+          alternateRowStyles: {
+            fillColor: [240, 253, 250], // teal-50
+          },
+        });
+      } else {
+        // Fallback: simple text-based table
+        doc.setFontSize(9);
+        const columnWidth = (doc.internal.pageSize.getWidth() - 40) / columns.length;
+        
+        // Header
+        columns.forEach((col, idx) => {
           doc.text(
-            `Page ${pageCount}`,
-            pageWidth - 20,
-            pageHeight - 10
+            col.charAt(0).toUpperCase() + col.slice(1).replace(/_/g, ' '),
+            20 + idx * columnWidth,
+            yPosition
           );
-        },
-      });
+        });
+        yPosition += 7;
+        
+        // Rows
+        rows.forEach(row => {
+          row.forEach((cell, idx) => {
+            doc.text(String(cell).substring(0, 30), 20 + idx * columnWidth, yPosition);
+          });
+          yPosition += 7;
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      }
 
       doc.save(`${filename}_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
@@ -255,10 +406,19 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
           <div className="flex space-x-8 overflow-x-auto">
             {[
               { id: 'contacts', label: 'Contact Submissions', icon: Mail, count: contacts.length },
+              { id: 'appointments', label: 'Appointments', icon: Calendar, count: appointments.length },
+              { id: 'refills', label: 'Prescription Refills', icon: Pill, count: refills.length },
               { id: 'subscribers', label: 'Newsletter Subscribers', icon: Mail, count: subscribers.length },
               { id: 'messages', label: 'Chat Messages', icon: MessageSquare, count: messages.length },
             ].map((tab) => {
               const Icon = tab.icon;
+              let unreadCount = 0;
+              if (tab.id === 'contacts') unreadCount = getUnreadCount(contacts);
+              if (tab.id === 'appointments') unreadCount = getUnreadCount(appointments);
+              if (tab.id === 'refills') unreadCount = getUnreadCount(refills);
+              if (tab.id === 'subscribers') unreadCount = getUnreadCount(subscribers);
+              if (tab.id === 'messages') unreadCount = getUnreadCount(messages);
+              
               return (
                 <button
                   key={tab.id}
@@ -274,6 +434,11 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                   <span className="bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 px-2 py-1 rounded-full text-xs font-bold">
                     {tab.count}
                   </span>
+                  {unreadCount > 0 && (
+                    <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      {unreadCount}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -289,19 +454,92 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
           </div>
         ) : (
           <>
+            {/* Filter Buttons */}
+            <div className="flex gap-3 mb-6 flex-wrap">
+              <button
+                onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                  showUnreadOnly
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                <Mail className="w-4 h-4" />
+                <span>Unread Only</span>
+              </button>
+              <button
+                onClick={() => setShowArchived(!showArchived)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                  showArchived
+                    ? 'bg-yellow-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                <Archive className="w-4 h-4" />
+                <span>{showArchived ? 'Hide Archived' : 'Show Archived'}</span>
+              </button>
+              {(showUnreadOnly || showArchived) && (
+                <button
+                  onClick={() => {
+                    setShowUnreadOnly(false);
+                    setShowArchived(false);
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors"
+                >
+                  <span>Clear Filters</span>
+                </button>
+              )}
+            </div>
+
             {/* Export Buttons */}
             <div className="flex gap-4 mb-6">
               {activeTab === 'contacts' && contacts.length > 0 && (
                 <>
                   <button
-                    onClick={() => exportToCSV(contacts, 'contact_submissions')}
+                    onClick={() => exportToCSV(getFilteredData(contacts), 'contact_submissions')}
                     className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                   >
                     <Download className="w-5 h-5" />
                     <span>Export CSV</span>
                   </button>
                   <button
-                    onClick={() => exportToPDF(contacts, 'Contact Submissions')}
+                    onClick={() => exportToPDF(getFilteredData(contacts), 'Contact Submissions')}
+                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Export PDF</span>
+                  </button>
+                </>
+              )}
+              {activeTab === 'appointments' && appointments.length > 0 && (
+                <>
+                  <button
+                    onClick={() => exportToCSV(getFilteredData(appointments), 'appointments')}
+                    className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Export CSV</span>
+                  </button>
+                  <button
+                    onClick={() => exportToPDF(getFilteredData(appointments), 'Appointments')}
+                    className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Export PDF</span>
+                  </button>
+                </>
+              )}
+              {activeTab === 'refills' && refills.length > 0 && (
+                <>
+                  <button
+                    onClick={() => exportToCSV(getFilteredData(refills), 'prescription_refills')}
+                    className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Export CSV</span>
+                  </button>
+                  <button
+                    onClick={() => exportToPDF(getFilteredData(refills), 'Prescription Refills')}
                     className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Download className="w-5 h-5" />
@@ -312,14 +550,14 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
               {activeTab === 'subscribers' && subscribers.length > 0 && (
                 <>
                   <button
-                    onClick={() => exportToCSV(subscribers, 'newsletter_subscribers')}
+                    onClick={() => exportToCSV(getFilteredData(subscribers), 'newsletter_subscribers')}
                     className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                   >
                     <Download className="w-5 h-5" />
                     <span>Export CSV</span>
                   </button>
                   <button
-                    onClick={() => exportToPDF(subscribers, 'Newsletter Subscribers')}
+                    onClick={() => exportToPDF(getFilteredData(subscribers), 'Newsletter Subscribers')}
                     className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Download className="w-5 h-5" />
@@ -330,14 +568,14 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
               {activeTab === 'messages' && messages.length > 0 && (
                 <>
                   <button
-                    onClick={() => exportToCSV(messages, 'chat_messages')}
+                    onClick={() => exportToCSV(getFilteredData(messages), 'chat_messages')}
                     className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                   >
                     <Download className="w-5 h-5" />
                     <span>Export CSV</span>
                   </button>
                   <button
-                    onClick={() => exportToPDF(messages, 'Chat Messages')}
+                    onClick={() => exportToPDF(getFilteredData(messages), 'Chat Messages')}
                     className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Download className="w-5 h-5" />
@@ -365,13 +603,16 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Phone</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Subject</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Message</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Action</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {contacts.map((contact, index) => (
+                        {getFilteredData(contacts).map((contact, index) => (
                           <tr key={contact.id} className={`hover:bg-opacity-75 transition-colors ${
+                            !contact.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
+                          } ${
                             index % 2 === 0 
                               ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
                               : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
@@ -388,18 +629,54 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                                 {expandedContactId === contact.id ? contact.message : contact.message.substring(0, 50) + (contact.message.length > 50 ? '...' : '')}
                               </button>
                             </td>
+                            <td className="px-6 py-4 text-sm">
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(contact.status)}`}>
+                                {contact.status || 'new'}
+                              </span>
+                            </td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{new Date(contact.created_at).toLocaleDateString()}</td>
                             <td className="px-6 py-4 text-sm">
-                              {canDelete() ? (
+                              <div className="flex items-center space-x-2">
                                 <button
-                                  onClick={() => deleteRecord('contact_submissions', contact.id)}
-                                  className="text-red-600 hover:text-red-800 dark:hover:text-red-400 transition-colors"
+                                  onClick={() => toggleReadStatus('contact_submissions', contact.id, contact.is_read)}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    contact.is_read
+                                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                                      : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 hover:bg-blue-200'
+                                  }`}
+                                  title={contact.is_read ? 'Mark as unread' : 'Mark as read'}
                                 >
-                                  <Trash2 className="w-5 h-5" />
+                                  <Mail className="w-4 h-4" />
                                 </button>
-                              ) : (
-                                <span className="text-gray-400 dark:text-gray-600">—</span>
-                              )}
+                                <button
+                                  onClick={() => toggleArchiveStatus('contact_submissions', contact.id, contact.is_archived)}
+                                  className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-300 hover:bg-yellow-200 transition-colors"
+                                  title={contact.is_archived ? 'Unarchive' : 'Archive'}
+                                >
+                                  <Archive className="w-4 h-4" />
+                                </button>
+                                <select
+                                  value={contact.status || 'new'}
+                                  onChange={(e) => updateStatus('contact_submissions', contact.id, e.target.value)}
+                                  className="px-2 py-1 rounded-lg text-xs font-medium border border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                                >
+                                  <option value="new">New</option>
+                                  <option value="pending">Pending</option>
+                                  <option value="in-progress">In Progress</option>
+                                  <option value="completed">Completed</option>
+                                  <option value="cancelled">Cancelled</option>
+                                </select>
+                                {canDelete() ? (
+                                  <button
+                                    onClick={() => deleteRecord('contact_submissions', contact.id)}
+                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-5" />
+                                  </button>
+                                ) : (
+                                  <span className="text-gray-400 dark:text-gray-600">—</span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -426,12 +703,14 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Email</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Subscribed Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Action</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {subscribers.map((subscriber, index) => (
+                        {getFilteredData(subscribers).map((subscriber, index) => (
                           <tr key={subscriber.id} className={`hover:bg-opacity-75 transition-colors ${
+                            !subscriber.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
+                          } ${
                             index % 2 === 0 
                               ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
                               : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
@@ -440,16 +719,36 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{subscriber.full_name || '-'}</td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{new Date(subscriber.created_at).toLocaleDateString()}</td>
                             <td className="px-6 py-4 text-sm">
-                              {canDelete() ? (
+                              <div className="flex items-center space-x-2">
                                 <button
-                                  onClick={() => deleteRecord('newsletter_subscribers', subscriber.id)}
-                                  className="text-red-600 hover:text-red-800 dark:hover:text-red-400 transition-colors"
+                                  onClick={() => toggleReadStatus('newsletter_subscribers', subscriber.id, subscriber.is_read)}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    subscriber.is_read
+                                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                                      : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 hover:bg-blue-200'
+                                  }`}
+                                  title={subscriber.is_read ? 'Mark as unread' : 'Mark as read'}
                                 >
-                                  <Trash2 className="w-5 h-5" />
+                                  <Mail className="w-4 h-4" />
                                 </button>
-                              ) : (
-                                <span className="text-gray-400 dark:text-gray-600">—</span>
-                              )}
+                                <button
+                                  onClick={() => toggleArchiveStatus('newsletter_subscribers', subscriber.id, subscriber.is_archived)}
+                                  className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-300 hover:bg-yellow-200 transition-colors"
+                                  title={subscriber.is_archived ? 'Unarchive' : 'Archive'}
+                                >
+                                  <Archive className="w-4 h-4" />
+                                </button>
+                                {canDelete() ? (
+                                  <button
+                                    onClick={() => deleteRecord('newsletter_subscribers', subscriber.id)}
+                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-5" />
+                                  </button>
+                                ) : (
+                                  <span className="text-gray-400 dark:text-gray-600">—</span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -479,12 +778,14 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Message</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Session ID</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Action</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {messages.map((msg, index) => (
+                        {getFilteredData(messages).map((msg, index) => (
                           <tr key={msg.id} className={`hover:bg-opacity-75 transition-colors ${
+                            !msg.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
+                          } ${
                             index % 2 === 0 
                               ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
                               : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
@@ -511,16 +812,246 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 font-mono text-xs">{msg.session_id?.substring(0, 12)}...</td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{new Date(msg.created_at).toLocaleDateString()}</td>
                             <td className="px-6 py-4 text-sm">
-                              {canDelete() ? (
+                              <div className="flex items-center space-x-2">
                                 <button
-                                  onClick={() => deleteRecord('chat_messages', msg.id)}
-                                  className="text-red-600 hover:text-red-800 dark:hover:text-red-400 transition-colors"
+                                  onClick={() => toggleReadStatus('chat_messages', msg.id, msg.is_read)}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    msg.is_read
+                                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                                      : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 hover:bg-blue-200'
+                                  }`}
+                                  title={msg.is_read ? 'Mark as unread' : 'Mark as read'}
                                 >
-                                  <Trash2 className="w-5 h-5" />
+                                  <Mail className="w-4 h-4" />
                                 </button>
-                              ) : (
-                                <span className="text-gray-400 dark:text-gray-600">—</span>
-                              )}
+                                <button
+                                  onClick={() => toggleArchiveStatus('chat_messages', msg.id, msg.is_archived)}
+                                  className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-300 hover:bg-yellow-200 transition-colors"
+                                  title={msg.is_archived ? 'Unarchive' : 'Archive'}
+                                >
+                                  <Archive className="w-4 h-4" />
+                                </button>
+                                {canDelete() ? (
+                                  <button
+                                    onClick={() => deleteRecord('chat_messages', msg.id)}
+                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-5" />
+                                  </button>
+                                ) : (
+                                  <span className="text-gray-400 dark:text-gray-600">—</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Appointments Table */}
+            {activeTab === 'appointments' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                {appointments.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                    <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No appointments yet</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Email</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Phone</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Service Type</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Preferred Date</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Preferred Time</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Message</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Date</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {getFilteredData(appointments).map((appointment, index) => (
+                          <tr key={appointment.id} className={`hover:bg-opacity-75 transition-colors ${
+                            !appointment.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
+                          } ${
+                            index % 2 === 0 
+                              ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
+                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                          }`}>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">{appointment.full_name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{appointment.email}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{appointment.phone}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{appointment.service_type}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{new Date(appointment.preferred_date).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{appointment.preferred_time}</td>
+                            <td className={`px-6 py-4 text-sm text-gray-600 dark:text-gray-400 ${expandedAppointmentId === appointment.id ? 'max-w-none' : 'max-w-xs'}`}>
+                              <button
+                                onClick={() => setExpandedAppointmentId(expandedAppointmentId === appointment.id ? null : appointment.id)}
+                                className={`text-left hover:text-teal-600 dark:hover:text-teal-400 transition-colors ${expandedAppointmentId === appointment.id ? 'whitespace-normal break-words' : 'truncate'}`}
+                              >
+                                {expandedAppointmentId === appointment.id ? appointment.message : appointment.message.substring(0, 50) + (appointment.message.length > 50 ? '...' : '')}
+                              </button>
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(appointment.status)}`}>
+                                {appointment.status || 'pending'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{new Date(appointment.created_at).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 text-sm">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => toggleReadStatus('appointments', appointment.id, appointment.is_read)}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    appointment.is_read
+                                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                                      : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 hover:bg-blue-200'
+                                  }`}
+                                  title={appointment.is_read ? 'Mark as unread' : 'Mark as read'}
+                                >
+                                  <Mail className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => toggleArchiveStatus('appointments', appointment.id, appointment.is_archived)}
+                                  className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-300 hover:bg-yellow-200 transition-colors"
+                                  title={appointment.is_archived ? 'Unarchive' : 'Archive'}
+                                >
+                                  <Archive className="w-4 h-4" />
+                                </button>
+                                <select
+                                  value={appointment.status || 'pending'}
+                                  onChange={(e) => updateStatus('appointments', appointment.id, e.target.value)}
+                                  className="px-2 py-1 rounded-lg text-xs font-medium border border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="in-progress">In Progress</option>
+                                  <option value="completed">Completed</option>
+                                  <option value="cancelled">Cancelled</option>
+                                </select>
+                                {canDelete() ? (
+                                  <button
+                                    onClick={() => deleteRecord('appointments', appointment.id)}
+                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-5" />
+                                  </button>
+                                ) : (
+                                  <span className="text-gray-400 dark:text-gray-600">—</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Prescription Refills Table */}
+            {activeTab === 'refills' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                {refills.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                    <Pill className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No prescription refills yet</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Email</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Phone</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Prescription #</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Medication</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Doctor</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Notes</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Date</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {getFilteredData(refills).map((refill, index) => (
+                          <tr key={refill.id} className={`hover:bg-opacity-75 transition-colors ${
+                            !refill.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
+                          } ${
+                            index % 2 === 0 
+                              ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
+                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                          }`}>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">{refill.full_name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{refill.email}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{refill.phone}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{refill.prescription_number || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{refill.medication_name}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{refill.prescribing_doctor || '-'}</td>
+                            <td className={`px-6 py-4 text-sm text-gray-600 dark:text-gray-400 ${expandedRefillId === refill.id ? 'max-w-none' : 'max-w-xs'}`}>
+                              <button
+                                onClick={() => setExpandedRefillId(expandedRefillId === refill.id ? null : refill.id)}
+                                className={`text-left hover:text-teal-600 dark:hover:text-teal-400 transition-colors ${expandedRefillId === refill.id ? 'whitespace-normal break-words' : 'truncate'}`}
+                              >
+                                {expandedRefillId === refill.id ? refill.additional_notes : refill.additional_notes.substring(0, 50) + (refill.additional_notes.length > 50 ? '...' : '')}
+                              </button>
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(refill.status)}`}>
+                                {refill.status || 'pending'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{new Date(refill.created_at).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 text-sm">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => toggleReadStatus('prescription_refills', refill.id, refill.is_read)}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    refill.is_read
+                                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
+                                      : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 hover:bg-blue-200'
+                                  }`}
+                                  title={refill.is_read ? 'Mark as unread' : 'Mark as read'}
+                                >
+                                  <Mail className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => toggleArchiveStatus('prescription_refills', refill.id, refill.is_archived)}
+                                  className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-300 hover:bg-yellow-200 transition-colors"
+                                  title={refill.is_archived ? 'Unarchive' : 'Archive'}
+                                >
+                                  <Archive className="w-4 h-4" />
+                                </button>
+                                <select
+                                  value={refill.status || 'pending'}
+                                  onChange={(e) => updateStatus('prescription_refills', refill.id, e.target.value)}
+                                  className="px-2 py-1 rounded-lg text-xs font-medium border border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                                >
+                                  <option value="pending">Pending</option>
+                                  <option value="in-progress">In Progress</option>
+                                  <option value="completed">Completed</option>
+                                  <option value="cancelled">Cancelled</option>
+                                </select>
+                                {canDelete() ? (
+                                  <button
+                                    onClick={() => deleteRecord('prescription_refills', refill.id)}
+                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-5" />
+                                  </button>
+                                ) : (
+                                  <span className="text-gray-400 dark:text-gray-600">—</span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}

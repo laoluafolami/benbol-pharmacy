@@ -122,13 +122,13 @@ export default function Footer({ onNavigate }: FooterProps) {
               </li>
               <li className="flex items-start space-x-3">
                 <Mail className="w-5 h-5 text-teal-400 mt-0.5" />
-                <a href="mailto:info@benbolpharmacy.com" className="hover:text-teal-400 transition-colors">
-                  info@benbolpharmacy.com
+                <a href="mailto:benbolglobal@gmail.com" className="hover:text-teal-400 transition-colors">
+                  benbolglobal@gmail.com
                 </a>
               </li>
               <li className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-teal-400 mt-0.5" />
-                <span>Vickie's Plaza, Lekki-Epe Expressway, Opposite Crown Estate, Sangotedo, Lagos State</span>
+                <span>Benbol Pharmacy, Vickie's Plaza, Lekki-Epe Expressway, Sun View 2nd gate Bus stop, Opposite Peace Garden & Crown Estates, Sangotedo, Lagos</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Clock className="w-5 h-5 text-teal-400 mt-0.5" />

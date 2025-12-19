@@ -24,7 +24,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
     const { data, error: authError } = await signInAdmin(email, password);
 
     if (authError) {
-      setError(authError.message || 'Failed to login. Please check your credentials.');
+      setError((authError as any)?.message || 'Failed to login. Please check your credentials.');
     } else if (data?.session) {
       onLoginSuccess();
     }
@@ -76,7 +76,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@benbolpharmacy.com"
+                  placeholder="benbolglobal@gmail.com"
                   required
                   className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
@@ -145,7 +145,7 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
                   type="email"
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="admin@benbolpharmacy.com"
+                  placeholder="benbolglobal@gmail.com"
                   required
                   className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />

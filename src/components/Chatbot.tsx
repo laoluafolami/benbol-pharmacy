@@ -43,7 +43,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     }
 
     if (lowerMessage.includes('location') || lowerMessage.includes('address') || lowerMessage.includes('where')) {
-      return { text: "You can find us at Vickie's Plaza, Lekki-Epe Expressway, Opposite Crown Estate, Sangotedo, Lagos State. Feel free to call us at 09167858304 for directions." };
+      return { text: "You can find us at Benbol Pharmacy, Vickie's Plaza, Lekki-Epe Expressway, Sun View 2nd gate Bus stop, Opposite Peace Garden & Crown Estates, Sangotedo, Lagos. Feel free to call us at 09167858304 for directions." };
     }
 
     if (lowerMessage.includes('phone') || lowerMessage.includes('call') || lowerMessage.includes('contact')) {
