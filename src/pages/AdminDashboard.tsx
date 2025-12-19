@@ -122,34 +122,44 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
 
   useEffect(() => {
     if (isAuthenticated) {
+      fetchAllData();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated && activeTab) {
       fetchData();
     }
-  }, [isAuthenticated, activeTab]);
+  }, [activeTab]);
 
-  const fetchData = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     try {
-      if (activeTab === 'contacts') {
-        const { data } = await supabase.from('contact_submissions').select('*').order('created_at', { ascending: false });
-        setContacts(data || []);
-      } else if (activeTab === 'subscribers') {
-        const { data } = await supabase.from('newsletter_subscribers').select('*').order('created_at', { ascending: false });
-        setSubscribers(data || []);
-      } else if (activeTab === 'messages') {
-        const { data } = await supabase.from('chat_messages').select('*').order('created_at', { ascending: false });
-        setMessages(data || []);
-      } else if (activeTab === 'appointments') {
-        const { data } = await supabase.from('appointments').select('*').order('created_at', { ascending: false });
-        setAppointments(data || []);
-      } else if (activeTab === 'refills') {
-        const { data } = await supabase.from('prescription_refills').select('*').order('created_at', { ascending: false });
-        setRefills(data || []);
-      }
+      // Fetch all data in parallel for counts
+      const [contactsRes, subscribersRes, messagesRes, appointmentsRes, refillsRes] = await Promise.all([
+        supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }),
+        supabase.from('newsletter_subscribers').select('*').order('created_at', { ascending: false }),
+        supabase.from('chat_messages').select('*').order('created_at', { ascending: false }),
+        supabase.from('appointments').select('*').order('created_at', { ascending: false }),
+        supabase.from('prescription_refills').select('*').order('created_at', { ascending: false }),
+      ]);
+
+      setContacts(contactsRes.data || []);
+      setSubscribers(subscribersRes.data || []);
+      setMessages(messagesRes.data || []);
+      setAppointments(appointmentsRes.data || []);
+      setRefills(refillsRes.data || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching all data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchData = async () => {
+    // Data is already loaded, no need to fetch again
+    // This function is kept for compatibility but doesn't do anything
+    // since all data is loaded on mount
   };
 
   const canDelete = () => {
@@ -167,7 +177,7 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
     if (!confirm('Are you sure you want to delete this record?')) return;
     try {
       await supabase.from(table).delete().eq('id', id);
-      fetchData();
+      fetchAllData(); // Refresh all data after deletion
     } catch (error) {
       console.error('Error deleting record:', error);
     }
