@@ -168,9 +168,24 @@ export default function Footer({ onNavigate }: FooterProps) {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} Benbol Pharmacy. All rights reserved.</p>
-          <p className="mt-2 text-gray-500">Licensed Pharmacy - Professional Healthcare Services</p>
+        <div className="border-t border-gray-800 mt-8 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p className="text-center text-sm">&copy; {new Date().getFullYear()} Benbol Pharmacy. All rights reserved.</p>
+            <div className="flex flex-wrap justify-center gap-4 text-sm">
+              <button onClick={() => onNavigate('privacy')} className="hover:text-teal-400 transition-colors">
+                Privacy Policy
+              </button>
+              <span className="text-gray-600">|</span>
+              <button onClick={() => onNavigate('cookies')} className="hover:text-teal-400 transition-colors">
+                Cookie Policy
+              </button>
+              <span className="text-gray-600">|</span>
+              <button onClick={() => onNavigate('terms')} className="hover:text-teal-400 transition-colors">
+                Terms of Use
+              </button>
+            </div>
+          </div>
+          <p className="mt-4 text-center text-sm text-gray-500">Licensed Pharmacy - Professional Healthcare Services</p>
         </div>
       </div>
     </footer>
