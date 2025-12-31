@@ -15,6 +15,7 @@ import AdminUsersPage from './pages/AdminUsersPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import TermsOfUsePage from './pages/TermsOfUsePage';
+import InvoiceGeneratorPage from './pages/InvoiceGeneratorPage';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -52,12 +53,14 @@ function App() {
         return <AdminDashboard onNavigateToUsers={() => setCurrentPage('admin-users')} />;
       case 'admin-users':
         return <AdminUsersPage onNavigateBack={() => setCurrentPage('admin')} />;
+      case 'invoice':
+        return <InvoiceGeneratorPage />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
   };
 
-  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users';
+  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users' || currentPage === 'invoice';
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
