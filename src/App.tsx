@@ -50,11 +50,14 @@ function App() {
       case 'terms':
         return <TermsOfUsePage />;
       case 'admin':
-        return <AdminDashboard onNavigateToUsers={() => setCurrentPage('admin-users')} />;
+        return <AdminDashboard
+          onNavigateToUsers={() => setCurrentPage('admin-users')}
+          onNavigateToInvoice={() => setCurrentPage('invoice')}
+        />;
       case 'admin-users':
         return <AdminUsersPage onNavigateBack={() => setCurrentPage('admin')} />;
       case 'invoice':
-        return <InvoiceGeneratorPage />;
+        return <InvoiceGeneratorPage onNavigateBack={() => setCurrentPage('admin')} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }

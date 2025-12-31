@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Download, Eye, Plus, Trash2 } from 'lucide-react';
+import { FileText, Download, Eye, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { downloadInvoice, previewInvoice } from '../utils/generateInvoice';
 
 interface InvoiceItem {
@@ -9,7 +9,11 @@ interface InvoiceItem {
   amount: number;
 }
 
-export default function InvoiceGeneratorPage() {
+interface InvoiceGeneratorPageProps {
+  onNavigateBack?: () => void;
+}
+
+export default function InvoiceGeneratorPage({ onNavigateBack }: InvoiceGeneratorPageProps) {
   const today = new Date().toISOString().split('T')[0];
   const invoiceNum = `INV-${Date.now().toString().slice(-8)}`;
 
@@ -237,6 +241,15 @@ export default function InvoiceGeneratorPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="container mx-auto px-4 max-w-6xl">
+        {onNavigateBack && (
+          <button
+            onClick={onNavigateBack}
+            className="flex items-center space-x-2 mb-4 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-semibold">Back to Admin Dashboard</span>
+          </button>
+        )}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
