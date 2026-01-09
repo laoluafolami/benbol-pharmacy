@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
@@ -18,11 +18,25 @@ import TermsOfUsePage from './pages/TermsOfUsePage';
 import InvoiceGeneratorPage from './pages/InvoiceGeneratorPage';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+  const getPageFromHash = () => {
+    const hash = window.location.hash.slice(1);
+    return hash || 'home';
+  };
+
+  const [currentPage, setCurrentPage] = useState(getPageFromHash());
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentPage(getPageFromHash());
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const handleNavigate = (page: string) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.location.hash = page;
   };
 
   const renderPage = () => {
