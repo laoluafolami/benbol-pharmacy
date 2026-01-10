@@ -118,6 +118,10 @@ export default function BlogPage() {
       } else {
         setMessage('Successfully subscribed to our newsletter!');
         setEmail('');
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setMessage('');
+        }, 5000);
       }
     } catch (error) {
       console.error('Newsletter error:', error);
@@ -241,9 +245,14 @@ export default function BlogPage() {
               </button>
             </form>
             {message && (
-              <p className={`text-center mt-4 text-sm ${message.includes('Success') ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                {message}
-              </p>
+              <div className={`text-center mt-4 text-sm transition-all duration-500 ease-in-out ${message.includes('Success') ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                <div className={`inline-flex items-center px-4 py-2 rounded-lg ${message.includes('Success') ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'}`}>
+                  {message.includes('Success') && <span className="mr-2">✅</span>}
+                  {message.includes('already') && <span className="mr-2">ℹ️</span>}
+                  {message.includes('Failed') && <span className="mr-2">❌</span>}
+                  {message}
+                </div>
+              </div>
             )}
           </div>
         </div>
