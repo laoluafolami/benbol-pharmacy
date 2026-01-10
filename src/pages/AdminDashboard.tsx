@@ -1186,11 +1186,10 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                   </div>
                 ) : (
                   <div className="w-full overflow-x-auto relative z-10" style={{ WebkitOverflowScrolling: 'touch', maxHeight: '70vh', overflowY: 'auto' }}>
-                    <table className="table-auto" style={{ minWidth: '800px', width: 'max-content' }}>
+                    <table className="table-auto" style={{ minWidth: '600px', width: 'max-content' }}>
                       <thead className="bg-gradient-to-r from-teal-500 to-blue-600 sticky top-0 z-40">
                         <tr>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-48">Email</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Name</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Subscribed Date</th>
                           <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-40">Actions</th>
                         </tr>
@@ -1205,9 +1204,6 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
                               : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
                           }`}>
                             <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium break-words">{subscriber.email}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                              {subscriber.full_name && subscriber.full_name.trim() ? subscriber.full_name : 'No name provided'}
-                            </td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{new Date(subscriber.created_at).toLocaleDateString()}</td>
                             <td className="px-6 py-4 text-sm whitespace-nowrap">
                               <div className="flex items-center space-x-2">
