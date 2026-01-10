@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
@@ -12,6 +12,7 @@ import RefillFormPage from './pages/RefillFormPage';
 import AppointmentFormPage from './pages/AppointmentFormPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsersPage from './pages/AdminUsersPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import TermsOfUsePage from './pages/TermsOfUsePage';
@@ -19,9 +20,26 @@ import TermsOfUsePage from './pages/TermsOfUsePage';
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
 
+  // Check URL for password reset flow
+  useEffect(() => {
+    const urlHash = window.location.hash;
+    
+    // Check if this is a password reset callback from Supabase
+    if (urlHash.includes('type=recovery') || window.location.pathname === '/reset-password') {
+      setCurrentPage('reset-password');
+    }
+  }, []);
+
   const handleNavigate = (page: string) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Update URL for password reset page
+    if (page === 'reset-password') {
+      window.history.pushState({}, '', '/reset-password');
+    } else {
+      window.history.pushState({}, '', '/');
+    }
   };
 
   const renderPage = () => {
@@ -52,12 +70,14 @@ function App() {
         return <AdminDashboard onNavigateToUsers={() => setCurrentPage('admin-users')} />;
       case 'admin-users':
         return <AdminUsersPage onNavigateBack={() => setCurrentPage('admin')} />;
+      case 'reset-password':
+        return <ResetPasswordPage onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
   };
 
-  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users';
+  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users' || currentPage === 'reset-password';
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
