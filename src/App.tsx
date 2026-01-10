@@ -16,9 +16,25 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import TermsOfUsePage from './pages/TermsOfUsePage';
+import InvoiceGeneratorPage from './pages/InvoiceGeneratorPage';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+  const getPageFromHash = () => {
+    const hash = window.location.hash.slice(1);
+    return hash || 'home';
+  };
+
+  const [currentPage, setCurrentPage] = useState(getPageFromHash());
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentPage(getPageFromHash());
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Check URL for password reset flow
   useEffect(() => {
@@ -33,15 +49,7 @@ function App() {
   }, []);
 
   const handleNavigate = (page: string) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Update URL for password reset page
-    if (page === 'reset-password') {
-      window.history.pushState({}, '', '/reset-password');
-    } else {
-      window.history.pushState({}, '', '/');
-    }
+    window.location.hash = page;
   };
 
   const renderPage = () => {
@@ -69,17 +77,20 @@ function App() {
       case 'terms':
         return <TermsOfUsePage />;
       case 'admin':
-        return <AdminDashboard onNavigateToUsers={() => setCurrentPage('admin-users')} />;
+        return <AdminDashboard
+          onNavigateToUsers={() => setCurrentPage('admin-users')}
+          onNavigateToInvoice={() => setCurrentPage('invoice')}
+        />;
       case 'admin-users':
         return <AdminUsersPage onNavigateBack={() => setCurrentPage('admin')} />;
-      case 'reset-password':
-        return <ResetPasswordPage onNavigate={handleNavigate} />;
+      case 'invoice':
+        return <InvoiceGeneratorPage onNavigateBack={() => setCurrentPage('admin')} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
   };
 
-  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users' || currentPage === 'reset-password';
+  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users' || currentPage === 'invoice';
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
