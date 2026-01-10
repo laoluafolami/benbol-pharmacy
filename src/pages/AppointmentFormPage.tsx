@@ -78,7 +78,7 @@ export default function AppointmentFormPage({ onNavigate }: AppointmentFormPageP
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
-      <section className="bg-gradient-to-br from-teal-50 to-blue-50 py-20">
+      <section className="bg-gradient-to-br from-teal-50 to-blue-50 py-4">
         <div className="container mx-auto px-4">
           <button
             onClick={() => onNavigate('home')}
@@ -88,11 +88,11 @@ export default function AppointmentFormPage({ onNavigate }: AppointmentFormPageP
             <span>Back to Home</span>
           </button>
           <div className="max-w-4xl mx-auto text-center">
-            <div className="bg-teal-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Calendar className="w-10 h-10 text-teal-600" />
+            <div className="bg-teal-100 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Calendar className="w-5 h-5 text-teal-600" />
             </div>
-            <h1 className="text-5xl font-bold text-gray-900 mb-6">Book a Consultation</h1>
-            <p className="text-xl text-gray-600 leading-relaxed">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Book a Consultation</h1>
+            <p className="text-base text-gray-600 leading-relaxed">
               Schedule a consultation with our experienced pharmacists
             </p>
           </div>

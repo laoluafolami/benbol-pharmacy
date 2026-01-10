@@ -320,10 +320,14 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           <div className="text-center mt-12">
             <button
               onClick={() => onNavigate('services')}
-              className="inline-flex items-center space-x-2 text-teal-600 font-semibold text-lg hover:text-teal-700"
+              className="group relative inline-flex items-center space-x-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-teal-600 hover:to-blue-700 transition-all duration-300 hover:scale-105 shadow-xl overflow-hidden"
             >
-              <span>View All Services</span>
-              <ArrowRight className="w-5 h-5" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <div className="bg-white/20 p-2 rounded-lg group-hover:bg-white/30 transition-colors">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <span className="relative z-10">View All Services</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
             </button>
           </div>
         </div>

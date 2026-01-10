@@ -12,6 +12,7 @@ import RefillFormPage from './pages/RefillFormPage';
 import AppointmentFormPage from './pages/AppointmentFormPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsersPage from './pages/AdminUsersPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import TermsOfUsePage from './pages/TermsOfUsePage';
@@ -33,6 +34,18 @@ function App() {
 
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Check URL for password reset flow
+  useEffect(() => {
+    const urlHash = window.location.hash;
+    const pathname = window.location.pathname;
+    
+    // Check if this is a password reset callback from Supabase
+    if (urlHash.includes('type=recovery') || pathname === '/reset-password' || urlHash.includes('access_token')) {
+      console.log('Detected password reset flow, navigating to reset-password page');
+      setCurrentPage('reset-password');
+    }
   }, []);
 
   const handleNavigate = (page: string) => {

@@ -37,6 +37,10 @@ export default function Footer({ onNavigate }: FooterProps) {
       } else {
         setMessage('Successfully subscribed to our newsletter!');
         setEmail('');
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setMessage('');
+        }, 5000);
       }
     } catch (error) {
       console.error('Newsletter error:', error);
@@ -160,9 +164,14 @@ export default function Footer({ onNavigate }: FooterProps) {
                 {loading ? 'Subscribing...' : 'Subscribe'}
               </button>
               {message && (
-                <p className={`text-sm ${message.includes('Success') ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {message}
-                </p>
+                <div className={`text-sm mt-2 transition-all duration-500 ease-in-out ${message.includes('Success') ? 'text-green-400' : 'text-yellow-400'}`}>
+                  <div className={`inline-flex items-center px-3 py-1 rounded-lg ${message.includes('Success') ? 'bg-green-900/20 border border-green-800' : 'bg-yellow-900/20 border border-yellow-800'}`}>
+                    {message.includes('Success') && <span className="mr-2">✅</span>}
+                    {message.includes('already') && <span className="mr-2">ℹ️</span>}
+                    {message.includes('Failed') && <span className="mr-2">❌</span>}
+                    {message}
+                  </div>
+                </div>
               )}
             </form>
           </div>
