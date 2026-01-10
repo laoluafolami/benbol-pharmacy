@@ -23,9 +23,11 @@ function App() {
   // Check URL for password reset flow
   useEffect(() => {
     const urlHash = window.location.hash;
+    const pathname = window.location.pathname;
     
     // Check if this is a password reset callback from Supabase
-    if (urlHash.includes('type=recovery') || window.location.pathname === '/reset-password') {
+    if (urlHash.includes('type=recovery') || pathname === '/reset-password' || urlHash.includes('access_token')) {
+      console.log('Detected password reset flow, navigating to reset-password page');
       setCurrentPage('reset-password');
     }
   }, []);

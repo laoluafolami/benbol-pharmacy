@@ -22,19 +22,43 @@ export default function ResetPasswordPage({ onNavigate }: ResetPasswordPageProps
     // Check if we have a valid session from the password reset link
     const checkSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session error:', error);
-          setError('Invalid or expired reset link. Please request a new password reset.');
-          setCheckingSession(false);
-          return;
-        }
+        // First, check if there are auth tokens in the URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
 
-        if (session) {
-          setIsValidSession(true);
+        console.log('URL hash params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
+
+        // If we have tokens in the URL, set the session
+        if (accessToken && refreshToken && type === 'recovery') {
+          console.log('Setting session from URL tokens');
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (error) {
+            console.error('Error setting session:', error);
+            setError('Invalid or expired reset link. Please request a new password reset.');
+          } else if (data.session) {
+            console.log('Session set successfully');
+            setIsValidSession(true);
+          }
         } else {
-          setError('Invalid or expired reset link. Please request a new password reset.');
+          // Check existing session
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Session error:', error);
+            setError('Invalid or expired reset link. Please request a new password reset.');
+          } else if (session) {
+            console.log('Found existing session');
+            setIsValidSession(true);
+          } else {
+            console.log('No valid session found');
+            setError('Invalid or expired reset link. Please request a new password reset.');
+          }
         }
       } catch (err) {
         console.error('Error checking session:', err);
