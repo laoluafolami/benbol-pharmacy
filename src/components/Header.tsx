@@ -34,7 +34,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4" />
-                <span className="hidden sm:inline">Mon-Sat: 8AM-8PM | Sun: 9AM-5PM</span>
+                <span className="hidden sm:inline">Mon-Sat: 8AM-8PM</span>
                 <span className="sm:hidden">Open Daily</span>
               </div>
             </div>
