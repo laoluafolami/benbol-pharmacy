@@ -124,7 +124,7 @@ export default function ContactPage() {
                     <p className="text-gray-700 dark:text-gray-300">Sun View 2nd gate Bus stop</p>
                     <p className="text-gray-700 dark:text-gray-300">Opposite Peace Garden & Crown Estates</p>
                     <p className="text-gray-700 dark:text-gray-300">Sangotedo, Lagos</p>
-                    <a href="#" className="text-teal-600 hover:text-teal-700 text-sm mt-2 inline-block">
+                    <a href="https://www.google.com/maps/search/Benbol+Pharmacy+Vickie's+Plaza+Lekki-Epe+Expressway+Sangotedo+Lagos" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 text-sm mt-2 inline-block">
                       Get Directions →
                     </a>
                   </div>
@@ -138,7 +138,6 @@ export default function ContactPage() {
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Business Hours</h3>
                     <div className="space-y-1 text-gray-700 dark:text-gray-300">
                       <p>Monday - Saturday: 8:00 AM - 8:00 PM</p>
-                      <p>Sunday: 9:00 AM - 5:00 PM</p>
                     </div>
                   </div>
                 </div>
