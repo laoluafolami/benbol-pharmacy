@@ -151,7 +151,7 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
       icon: Baby,
       title: 'Mother & Baby Care',
       description: 'Complete care solutions for mothers and infants.',
-      image: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=800',
+      image: 'https://images.pexels.com/photos/3845456/pexels-photo-3845456.jpeg?auto=compress&cs=tinysrgb&w=800',
       features: [
         'Prenatal vitamins and supplements',
         'Baby formula and feeding supplies',
