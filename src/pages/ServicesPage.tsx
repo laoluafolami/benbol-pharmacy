@@ -53,6 +53,7 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
       title: 'Walking Aids & Mobility Equipment',
       description: 'Comprehensive range of mobility solutions for enhanced independence.',
       image: 'https://images.pexels.com/photos/8460157/pexels-photo-8460157.jpeg?auto=compress&cs=tinysrgb&w=800',
+      imagePosition: 'object-top',
       features: [
         'Walking canes and crutches',
         'Walkers and rollators',
@@ -226,7 +227,7 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
                           <img
                             src={service.image}
                             alt={service.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ${service.imagePosition || 'object-center'}`}
                           />
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
