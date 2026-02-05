@@ -124,7 +124,7 @@ export default function ContactPage() {
                     <p className="text-gray-700 dark:text-gray-300">Sun View 2nd gate Bus stop</p>
                     <p className="text-gray-700 dark:text-gray-300">Opposite Peace Garden & Crown Estates</p>
                     <p className="text-gray-700 dark:text-gray-300">Sangotedo, Lagos</p>
-                    <a href="https://www.google.com/maps/search/Benbol+Pharmacy+Vickie's+Plaza+Lekki-Epe+Expressway+Sangotedo+Lagos" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 text-sm mt-2 inline-block">
+                    <a href="https://www.google.com/maps/search/?api=1&query=Benbol+Pharmacy+Vickie%27s+Plaza+Lekki-Epe+Expressway+Sun+View+2nd+gate+Bus+stop+Opposite+Peace+Garden+%26+Crown+Estates+Sangotedo+Lagos" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 text-sm mt-2 inline-block">
                       Get Directions →
                     </a>
                   </div>
