@@ -24,6 +24,22 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     {
       url: 'https://images.pexels.com/photos/5327584/pexels-photo-5327584.jpeg?auto=compress&cs=tinysrgb&w=1200',
       alt: 'Healthcare professional providing patient care'
+    },
+    {
+      url: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      alt: 'Pharmacist organizing medications on pharmacy shelves'
+    },
+    {
+      url: 'https://images.pexels.com/photos/5863391/pexels-photo-5863391.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      alt: 'Friendly pharmacist assisting elderly customer'
+    },
+    {
+      url: 'https://images.pexels.com/photos/4226769/pexels-photo-4226769.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      alt: 'Pharmacist reviewing prescription information'
+    },
+    {
+      url: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      alt: 'Healthcare team providing medication consultation'
     }
   ];
 
