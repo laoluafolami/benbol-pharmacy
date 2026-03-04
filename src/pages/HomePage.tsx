@@ -24,6 +24,22 @@ export default function HomePage({ onNavigate }: HomePageProps) {
     {
       url: 'https://images.pexels.com/photos/5327584/pexels-photo-5327584.jpeg?auto=compress&cs=tinysrgb&w=1200',
       alt: 'Healthcare professional providing patient care'
+    },
+    {
+      url: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      alt: 'Pharmacist organizing medications on pharmacy shelves'
+    },
+    {
+      url: 'https://images.pexels.com/photos/5863391/pexels-photo-5863391.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      alt: 'Friendly pharmacist assisting elderly customer'
+    },
+    {
+      url: 'https://images.pexels.com/photos/4226769/pexels-photo-4226769.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      alt: 'Pharmacist reviewing prescription information'
+    },
+    {
+      url: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      alt: 'Healthcare team providing medication consultation'
     }
   ];
 
@@ -138,28 +154,28 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           }}></div>
         </div>
 
-        <div className="container mx-auto px-4 py-20 lg:py-28">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+        <div className="container mx-auto px-4 py-16 lg:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center relative z-10">
             {/* Content */}
             <div className="max-w-2xl text-white">
-              <div className="inline-block mb-4 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold">
+              <div className="inline-block mb-3 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold">
                 ✨ Your Health, Our Priority
               </div>
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight animate-fade-in">
+              <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight animate-fade-in">
                 Excellence in
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-200 to-white">
                   Pharmaceutical Care
                 </span>
               </h1>
-              <p className="text-xl md:text-2xl mb-8 leading-relaxed text-teal-50">
+              <p className="text-lg md:text-xl mb-5 leading-relaxed text-teal-50">
                 Trusted by thousands for quality medications, expert consultation, and compassionate care since 2008.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
                 <button
                   onClick={() => {
                     onNavigate('appointment');
                   }}
-                  className="group bg-white text-teal-700 px-8 py-4 rounded-xl font-bold text-lg hover:bg-yellow-300 transition-all hover:scale-105 shadow-2xl flex items-center justify-center space-x-2"
+                  className="group bg-white text-teal-700 px-8 py-3 rounded-xl font-bold text-lg hover:bg-yellow-300 transition-all hover:scale-105 shadow-2xl flex items-center justify-center space-x-2"
                 >
                   <span>Book Consultation</span>
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -168,32 +184,32 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                   onClick={() => {
                     onNavigate('refill');
                   }}
-                  className="bg-white/10 backdrop-blur-sm border-2 border-white text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white hover:text-teal-700 transition-all hover:scale-105 shadow-2xl"
+                  className="bg-white/10 backdrop-blur-sm border-2 border-white text-white px-8 py-3 rounded-xl font-bold text-lg hover:bg-white hover:text-teal-700 transition-all hover:scale-105 shadow-2xl"
                 >
                   Refill Prescription
                 </button>
               </div>
               
               {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4 pt-8 border-t border-white/20">
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/20">
                 <div>
-                  <div className="text-3xl font-bold text-yellow-300">15+</div>
-                  <div className="text-sm text-teal-100">Years Experience</div>
+                  <div className="text-2xl md:text-3xl font-bold text-yellow-300">15+</div>
+                  <div className="text-xs md:text-sm text-teal-100">Years Experience</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-yellow-300">5000+</div>
-                  <div className="text-sm text-teal-100">Happy Customers</div>
+                  <div className="text-2xl md:text-3xl font-bold text-yellow-300">5000+</div>
+                  <div className="text-xs md:text-sm text-teal-100">Happy Customers</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-yellow-300">24/7</div>
-                  <div className="text-sm text-teal-100">Support Available</div>
+                  <div className="text-2xl md:text-3xl font-bold text-yellow-300">24/7</div>
+                  <div className="text-xs md:text-sm text-teal-100">Support Available</div>
                 </div>
               </div>
             </div>
 
             {/* Dynamic Image Carousel */}
             <div className="relative hidden lg:block">
-              <div className="relative h-[600px] rounded-3xl overflow-hidden shadow-2xl">
+              <div className="relative h-[450px] rounded-3xl overflow-hidden shadow-2xl">
                 {heroImages.map((image, index) => (
                   <div
                     key={index}
@@ -320,10 +336,14 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           <div className="text-center mt-12">
             <button
               onClick={() => onNavigate('services')}
-              className="inline-flex items-center space-x-2 text-teal-600 font-semibold text-lg hover:text-teal-700"
+              className="group relative inline-flex items-center space-x-3 bg-gradient-to-r from-teal-500 to-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-teal-600 hover:to-blue-700 transition-all duration-300 hover:scale-105 shadow-xl overflow-hidden"
             >
-              <span>View All Services</span>
-              <ArrowRight className="w-5 h-5" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <div className="bg-white/20 p-2 rounded-lg group-hover:bg-white/30 transition-colors">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <span className="relative z-10">View All Services</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
             </button>
           </div>
         </div>

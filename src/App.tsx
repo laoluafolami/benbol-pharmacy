@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Chatbot from './components/Chatbot';
@@ -12,13 +12,44 @@ import RefillFormPage from './pages/RefillFormPage';
 import AppointmentFormPage from './pages/AppointmentFormPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsersPage from './pages/AdminUsersPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
+import TermsOfUsePage from './pages/TermsOfUsePage';
+import InvoiceGeneratorPage from './pages/InvoiceGeneratorPage';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+  const getPageFromHash = () => {
+    const hash = window.location.hash.slice(1);
+    return hash || 'home';
+  };
+
+  const [currentPage, setCurrentPage] = useState(getPageFromHash());
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentPage(getPageFromHash());
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Check URL for password reset flow
+  useEffect(() => {
+    const urlHash = window.location.hash;
+    const pathname = window.location.pathname;
+    
+    // Check if this is a password reset callback from Supabase
+    if (urlHash.includes('type=recovery') || pathname === '/reset-password' || urlHash.includes('access_token')) {
+      console.log('Detected password reset flow, navigating to reset-password page');
+      setCurrentPage('reset-password');
+    }
+  }, []);
 
   const handleNavigate = (page: string) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.location.hash = page;
   };
 
   const renderPage = () => {
@@ -39,16 +70,27 @@ function App() {
         return <RefillFormPage onNavigate={handleNavigate} />;
       case 'appointment':
         return <AppointmentFormPage onNavigate={handleNavigate} />;
+      case 'privacy':
+        return <PrivacyPolicyPage />;
+      case 'cookies':
+        return <CookiePolicyPage />;
+      case 'terms':
+        return <TermsOfUsePage />;
       case 'admin':
-        return <AdminDashboard onNavigateToUsers={() => setCurrentPage('admin-users')} />;
+        return <AdminDashboard
+          onNavigateToUsers={() => setCurrentPage('admin-users')}
+          onNavigateToInvoice={() => setCurrentPage('invoice')}
+        />;
       case 'admin-users':
         return <AdminUsersPage onNavigateBack={() => setCurrentPage('admin')} />;
+      case 'invoice':
+        return <InvoiceGeneratorPage onNavigateBack={() => setCurrentPage('admin')} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
   };
 
-  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users';
+  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users' || currentPage === 'invoice';
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">

@@ -66,12 +66,50 @@ export default function AdminUsersPage({ onNavigateBack }: AdminUsersPageProps) 
 
   const fetchAdminUsers = async () => {
     setLoading(true);
-    const { data, error } = await getAdminUsers();
-    if (error) {
-      console.error('Error fetching admin users:', error);
-    } else {
-      setAdminUsers(data || []);
+    console.log('Fetching admin users...');
+    
+    // Temporary workaround: fetch from auth.users via RPC
+    try {
+      const { data: authUsers, error: authError } = await supabase.rpc('get_auth_users');
+      console.log('Auth users result:', { authUsers, authError });
+      
+      if (authUsers && !authError) {
+        // Convert auth users to admin user format
+        const formattedUsers = authUsers.map((user: any) => ({
+          id: user.id,
+          email: user.email,
+          role: 'admin', // Default role for now
+          created_at: user.created_at
+        }));
+        setAdminUsers(formattedUsers);
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      console.log('RPC not available, trying direct admin_users query');
     }
+    
+    // Try direct query
+    try {
+      const { data: directData, error: directError } = await supabase
+        .from('admin_users')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      console.log('Direct query result:', { directData, directError });
+      
+      if (directError) {
+        console.error('Direct query error:', directError);
+        // Show empty state if table doesn't work
+        setAdminUsers([]);
+      } else {
+        setAdminUsers(directData || []);
+      }
+    } catch (err) {
+      console.error('Direct query exception:', err);
+      setAdminUsers([]);
+    }
+    
     setLoading(false);
   };
 

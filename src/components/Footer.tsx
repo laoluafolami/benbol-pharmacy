@@ -37,6 +37,10 @@ export default function Footer({ onNavigate }: FooterProps) {
       } else {
         setMessage('Successfully subscribed to our newsletter!');
         setEmail('');
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setMessage('');
+        }, 5000);
       }
     } catch (error) {
       console.error('Newsletter error:', error);
@@ -122,13 +126,13 @@ export default function Footer({ onNavigate }: FooterProps) {
               </li>
               <li className="flex items-start space-x-3">
                 <Mail className="w-5 h-5 text-teal-400 mt-0.5" />
-                <a href="mailto:info@benbolpharmacy.com" className="hover:text-teal-400 transition-colors">
-                  info@benbolpharmacy.com
+                <a href="mailto:benbolglobal@gmail.com" className="hover:text-teal-400 transition-colors">
+                  benbolglobal@gmail.com
                 </a>
               </li>
               <li className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-teal-400 mt-0.5" />
-                <span>Vickie's Plaza, Lekki-Epe Expressway, Opposite Crown Estate, Sangotedo, Lagos State</span>
+                <span>Benbol Pharmacy, Vickie's Plaza, Lekki-Epe Expressway, Sun View 2nd gate Bus stop, Opposite Peace Garden & Crown Estates, Sangotedo, Lagos</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Clock className="w-5 h-5 text-teal-400 mt-0.5" />
@@ -160,17 +164,37 @@ export default function Footer({ onNavigate }: FooterProps) {
                 {loading ? 'Subscribing...' : 'Subscribe'}
               </button>
               {message && (
-                <p className={`text-sm ${message.includes('Success') ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {message}
-                </p>
+                <div className={`text-sm mt-2 transition-all duration-500 ease-in-out ${message.includes('Success') ? 'text-green-400' : 'text-yellow-400'}`}>
+                  <div className={`inline-flex items-center px-3 py-1 rounded-lg ${message.includes('Success') ? 'bg-green-900/20 border border-green-800' : 'bg-yellow-900/20 border border-yellow-800'}`}>
+                    {message.includes('Success') && <span className="mr-2">✅</span>}
+                    {message.includes('already') && <span className="mr-2">ℹ️</span>}
+                    {message.includes('Failed') && <span className="mr-2">❌</span>}
+                    {message}
+                  </div>
+                </div>
               )}
             </form>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} Benbol Pharmacy. All rights reserved.</p>
-          <p className="mt-2 text-gray-500">Licensed Pharmacy - Professional Healthcare Services</p>
+        <div className="border-t border-gray-800 mt-8 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p className="text-center text-sm">&copy; {new Date().getFullYear()} Benbol Pharmacy. All rights reserved.</p>
+            <div className="flex flex-wrap justify-center gap-4 text-sm">
+              <button onClick={() => onNavigate('privacy')} className="hover:text-teal-400 transition-colors">
+                Privacy Policy
+              </button>
+              <span className="text-gray-600">|</span>
+              <button onClick={() => onNavigate('cookies')} className="hover:text-teal-400 transition-colors">
+                Cookie Policy
+              </button>
+              <span className="text-gray-600">|</span>
+              <button onClick={() => onNavigate('terms')} className="hover:text-teal-400 transition-colors">
+                Terms of Use
+              </button>
+            </div>
+          </div>
+          <p className="mt-4 text-center text-sm text-gray-500">Licensed Pharmacy - Professional Healthcare Services</p>
         </div>
       </div>
     </footer>

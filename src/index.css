@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  /* Ensure smooth scrolling globally */
+  * {
+    scroll-behavior: smooth;
+  }
+  
+  /* Better scrollbar styling for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.7);
+  }
+}
+
 @layer utilities {
   @keyframes fade-in {
     from {
@@ -34,6 +60,24 @@
     }
   }
 
+  @keyframes reverse-spin {
+    from {
+      transform: rotate(360deg);
+    }
+    to {
+      transform: rotate(0deg);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.8);
+    }
+  }
+
   .animate-fade-in {
     animation: fade-in 1s ease-out;
   }
@@ -44,5 +88,49 @@
 
   .animate-slide-in-right {
     animation: slide-in-right 0.8s ease-out;
+  }
+
+  .animate-reverse-spin {
+    animation: reverse-spin 1s linear infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Force horizontal scrolling */
+  .force-horizontal-scroll {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
+  }
+
+  /* Table expansion styles */
+  .expandable-cell {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .expandable-cell.expanded {
+    white-space: normal;
+    max-width: none;
+  }
+
+  .expandable-cell.collapsed {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
   }
 }

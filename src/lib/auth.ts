@@ -62,13 +62,30 @@ export const getCurrentUser = async () => {
 // Reset password
 export const resetPassword = async (email: string) => {
   try {
+    // Get the correct redirect URL based on environment
+    const getRedirectUrl = () => {
+      const origin = window.location.origin;
+      
+      // For development
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        return `${origin}/reset-password`;
+      }
+      
+      // For production (Netlify or other hosting)
+      return `${origin}/reset-password`;
+    };
+
+    const redirectUrl = getRedirectUrl();
+    console.log('Password reset redirect URL:', redirectUrl);
+
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: redirectUrl,
     });
 
     if (error) throw error;
     return { data, error: null };
   } catch (error) {
+    console.error('Reset password error:', error);
     return { data: null, error };
   }
 };
