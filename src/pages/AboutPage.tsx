@@ -164,40 +164,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50 dark:bg-gray-800">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Meet Our Team</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">Experienced pharmacists dedicated to your health</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {team.map((member, index) => {
-              const teamImages = [
-                'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=400',
-                'https://images.pexels.com/photos/5327656/pexels-photo-5327656.jpeg?auto=compress&cs=tinysrgb&w=400',
-                'https://images.pexels.com/photos/5327653/pexels-photo-5327653.jpeg?auto=compress&cs=tinysrgb&w=400'
-              ];
-              return (
-                <div key={index} className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm text-center">
-                  <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden">
-                    <img
-                      src={teamImages[index]}
-                      alt={member.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{member.name}</h3>
-                  <p className="text-teal-600 font-semibold mb-1">{member.role}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{member.credentials}</p>
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{member.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
       <section className="py-16 bg-gradient-to-br from-teal-600 to-blue-700 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-4">Why Choose Benbol Pharmacy?</h2>

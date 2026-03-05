@@ -81,7 +81,7 @@ export default function FAQPage() {
         {
           question: 'What are your hours of operation?',
           answer:
-            'We are open Monday through Saturday from 8:00 AM to 8:00 PM, and Sundays from 9:00 AM to 5:00 PM. Please note that hours may vary on holidays.',
+            'We are open Monday through Saturday from 8:00 AM to 8:00 PM. Please note that hours may vary on holidays.',
         },
         {
           question: 'Do I need an appointment for pharmaceutical counseling?',

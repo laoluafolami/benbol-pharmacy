@@ -138,7 +138,6 @@ export default function Footer({ onNavigate }: FooterProps) {
                 <Clock className="w-5 h-5 text-teal-400 mt-0.5" />
                 <div>
                   <p>Mon-Sat: 8:00 AM - 8:00 PM</p>
-                  <p>Sunday: 9:00 AM - 5:00 PM</p>
                 </div>
               </li>
             </ul>

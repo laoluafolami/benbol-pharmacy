@@ -39,7 +39,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     const lowerMessage = userMessage.toLowerCase();
 
     if (lowerMessage.includes('hour') || lowerMessage.includes('open') || lowerMessage.includes('time')) {
-      return { text: 'We are open Monday-Saturday from 8:00 AM to 8:00 PM, and Sunday from 9:00 AM to 5:00 PM.' };
+      return { text: 'We are open Monday-Saturday from 8:00 AM to 8:00 PM.' };
     }
 
     if (lowerMessage.includes('location') || lowerMessage.includes('address') || lowerMessage.includes('where')) {

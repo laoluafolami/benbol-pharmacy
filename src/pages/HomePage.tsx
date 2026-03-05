@@ -10,36 +10,24 @@ export default function HomePage({ onNavigate }: HomePageProps) {
 
   const heroImages = [
     {
-      url: 'https://images.pexels.com/photos/7659564/pexels-photo-7659564.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      alt: 'Professional pharmacist consulting with customer'
+      url: '/carousel-1.jpg',
+      alt: 'Benbol Pharmacy - Professional pharmaceutical services'
     },
     {
-      url: 'https://images.pexels.com/photos/5327921/pexels-photo-5327921.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      alt: 'Modern pharmacy interior with organized shelves'
+      url: '/carousel-2.jpg',
+      alt: 'Expert pharmacist ready to assist you'
     },
     {
-      url: 'https://images.pexels.com/photos/3683041/pexels-photo-3683041.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      alt: 'Pharmacist preparing prescription medication'
+      url: '/carousel-3.jpg',
+      alt: 'Quality healthcare and patient care'
     },
     {
-      url: 'https://images.pexels.com/photos/5327584/pexels-photo-5327584.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      alt: 'Healthcare professional providing patient care'
+      url: '/carousel-4.jpg',
+      alt: 'Comprehensive pharmacy services'
     },
     {
-      url: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      alt: 'Pharmacist organizing medications on pharmacy shelves'
-    },
-    {
-      url: 'https://images.pexels.com/photos/5863391/pexels-photo-5863391.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      alt: 'Friendly pharmacist assisting elderly customer'
-    },
-    {
-      url: 'https://images.pexels.com/photos/4226769/pexels-photo-4226769.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      alt: 'Pharmacist reviewing prescription information'
-    },
-    {
-      url: 'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      alt: 'Healthcare team providing medication consultation'
+      url: '/carousel-5.jpg',
+      alt: 'Your trusted healthcare partner'
     }
   ];
 
@@ -154,7 +142,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           }}></div>
         </div>
 
-        <div className="container mx-auto px-4 py-16 lg:py-20">
+        <div className="container mx-auto px-4 py-16 lg:py-24 pb-20 lg:pb-28">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center relative z-10">
             {/* Content */}
             <div className="max-w-2xl text-white">

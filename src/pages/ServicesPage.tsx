@@ -10,14 +10,13 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
       icon: Pill,
       title: 'Prescription Medications',
       description: 'Expert prescription filling and medication management services.',
-      image: 'https://images.pexels.com/photos/3683041/pexels-photo-3683041.jpeg?auto=compress&cs=tinysrgb&w=800',
+      image: '/prescription-medications.jpg',
       features: [
         'Fast and accurate prescription processing',
         'Medication therapy management',
         'Drug interaction screening',
         'Generic medication alternatives',
         'Automatic refill reminders',
-        'Insurance claims processing',
       ],
     },
     {
@@ -52,8 +51,8 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
       icon: Accessibility,
       title: 'Walking Aids & Mobility Equipment',
       description: 'Comprehensive range of mobility solutions for enhanced independence.',
-      image: 'https://images.pexels.com/photos/8460157/pexels-photo-8460157.jpeg?auto=compress&cs=tinysrgb&w=800',
-      imagePosition: 'object-top',
+      image: '/walking-aids.jpg',
+      imagePosition: 'object-center',
       features: [
         'Walking canes and crutches',
         'Walkers and rollators',
@@ -67,7 +66,7 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
       icon: Stethoscope,
       title: 'Pharmaceutical Counselling',
       description: 'Professional consultation services for all your medication needs.',
-      image: 'https://images.pexels.com/photos/5327584/pexels-photo-5327584.jpeg?auto=compress&cs=tinysrgb&w=800',
+      image: '/pharmaceutical-counselling.jpg',
       features: [
         'One-on-one medication consultations',
         'Medication review services',
@@ -81,7 +80,7 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
       icon: Droplet,
       title: 'Skin Care Products',
       description: 'Premium skincare solutions for all skin types and concerns.',
-      image: 'https://images.pexels.com/photos/3762882/pexels-photo-3762882.jpeg?auto=compress&cs=tinysrgb&w=800',
+      image: '/skin-care-products.jpg',
       features: [
         'Medical-grade skincare',
         'Anti-aging products',
@@ -95,7 +94,8 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
       icon: Syringe,
       title: 'Immunization Services',
       description: 'Comprehensive vaccination services for all ages.',
-      image: 'https://images.pexels.com/photos/5863391/pexels-photo-5863391.jpeg?auto=compress&cs=tinysrgb&w=800',
+      image: '/immunization-services.jpg',
+      comingSoon: true,
       features: [
         'Flu shots and seasonal vaccines',
         'Travel vaccinations',
@@ -110,6 +110,7 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
       title: 'Health Screenings',
       description: 'Professional health monitoring and diagnostic services.',
       image: 'https://images.pexels.com/photos/4226769/pexels-photo-4226769.jpeg?auto=compress&cs=tinysrgb&w=800',
+      comingSoon: true,
       features: [
         'Blood pressure monitoring',
         'Blood glucose testing',
@@ -157,7 +158,7 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
         'Baby formula and feeding supplies',
         'Diapers and baby care products',
         'Breastfeeding support products',
-        'Postpartum care items',
+        { text: 'Postpartum care items', comingSoon: true },
         'Pediatric medications',
       ],
     },
@@ -245,16 +246,35 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
                       <service.icon className="w-4 h-4" />
                       <span>Service {String(index + 1).padStart(2, '0')}</span>
                     </div>
+                    {service.comingSoon && (
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-800 text-sm font-bold mb-3 shadow-md">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Coming Soon</span>
+                      </div>
+                    )}
                     <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">{service.title}</h2>
                     <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">{service.description}</p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-                      {service.features.map((feature, fIndex) => (
-                        <div key={fIndex} className="flex items-start gap-2.5">
-                          <CheckCircle className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
-                        </div>
-                      ))}
+                      {service.features.map((feature, fIndex) => {
+                        const isComingSoonFeature = typeof feature === 'object' && feature.comingSoon;
+                        const featureText = typeof feature === 'string' ? feature : feature.text;
+                        
+                        return (
+                          <div key={fIndex} className="flex flex-col gap-1">
+                            {isComingSoonFeature && (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-800 text-xs font-bold w-fit shadow-sm">
+                                <CheckCircle className="w-3 h-3" />
+                                <span>Coming Soon</span>
+                              </div>
+                            )}
+                            <div className="flex items-start gap-2.5">
+                              <CheckCircle className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                              <span className="text-sm text-gray-700 dark:text-gray-300">{featureText}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <button
@@ -285,7 +305,13 @@ export default function ServicesPage({ onNavigate }: ServicesPageProps) {
                 <div className="flex items-start space-x-3">
                   <CheckCircle className="w-6 h-6 text-teal-600 flex-shrink-0 mt-1" />
                   <div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Insurance Assistance</h4>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">Insurance Assistance</h4>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-800 text-xs font-bold">
+                        <CheckCircle className="w-3 h-3" />
+                        Coming Soon
+                      </span>
+                    </div>
                     <p className="text-gray-600 dark:text-gray-300">Help with insurance claims and coverage questions</p>
                   </div>
                 </div>
