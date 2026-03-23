@@ -62,20 +62,8 @@ export const getCurrentUser = async () => {
 // Reset password
 export const resetPassword = async (email: string) => {
   try {
-    // Get the correct redirect URL based on environment
-    const getRedirectUrl = () => {
-      const origin = window.location.origin;
-      
-      // For development
-      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-        return `${origin}/reset-password`;
-      }
-      
-      // For production (Netlify or other hosting)
-      return `${origin}/reset-password`;
-    };
-
-    const redirectUrl = getRedirectUrl();
+    // Use the site origin - Supabase will append the tokens to the URL
+    const redirectUrl = window.location.origin;
     console.log('Password reset redirect URL:', redirectUrl);
 
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {

@@ -295,7 +295,7 @@ export default function ContactPage() {
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center">Find Us Here</h2>
             <div className="rounded-2xl overflow-hidden shadow-lg h-96">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.3876234567!2d3.5789!3d6.4567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwMjcnMjQuMSJOIDPCsDM0JzQ0LjAiRQ!5e0!3m2!1sen!2sng!4v1234567890"
+                src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3964.7!2d3.638805556!3d6.470805556!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNsKwMjgnMTQuOSJOIDPCsDM4JzE5LjciRQ!5e0!3m2!1sen!2sng!4v1234567890"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

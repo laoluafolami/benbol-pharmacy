@@ -43,73 +43,85 @@ export default function HomePage({ onNavigate }: HomePageProps) {
       icon: Pill,
       title: 'Prescription Medications',
       description: 'Fast and accurate prescription filling with expert consultation.',
-      color: 'from-blue-500 to-blue-600'
+      color: 'from-blue-500 to-blue-600',
+      image: '/prescription-medications.jpg'
     },
     {
       icon: Heart,
       title: 'OTC Products',
       description: 'Wide range of over-the-counter medications and health products.',
-      color: 'from-red-500 to-pink-600'
+      color: 'from-red-500 to-pink-600',
+      image: 'https://images.pexels.com/photos/4386466/pexels-photo-4386466.jpeg?auto=compress&cs=tinysrgb&w=400'
     },
     {
       icon: Sparkles,
       title: 'Vitamins & Supplements',
       description: 'Quality vitamins and nutritional supplements for your wellness.',
-      color: 'from-yellow-500 to-orange-600'
+      color: 'from-yellow-500 to-orange-600',
+      image: 'https://images.pexels.com/photos/3683098/pexels-photo-3683098.jpeg?auto=compress&cs=tinysrgb&w=400'
     },
     {
       icon: Accessibility,
       title: 'Walking Aids',
       description: 'Mobility equipment and walking aids for enhanced independence.',
-      color: 'from-purple-500 to-purple-600'
+      color: 'from-purple-500 to-purple-600',
+      image: '/walking-aids.jpg'
     },
     {
       icon: Stethoscope,
       title: 'Pharmaceutical Counselling',
       description: 'Professional guidance on medication usage and health concerns.',
-      color: 'from-teal-500 to-cyan-600'
+      color: 'from-teal-500 to-cyan-600',
+      image: '/pharmaceutical-counselling.jpg'
     },
     {
       icon: Sparkles,
       title: 'Skin Care',
       description: 'Premium skincare products and expert advice for healthy skin.',
-      color: 'from-pink-500 to-rose-600'
+      color: 'from-pink-500 to-rose-600',
+      image: '/skin-care-products.jpg'
     },
     {
       icon: Syringe,
       title: 'Immunization Services',
       description: 'Flu shots, travel vaccines, and routine immunizations.',
-      color: 'from-green-500 to-emerald-600'
+      color: 'from-green-500 to-emerald-600',
+      image: '/immunization-services.jpg'
     },
     {
       icon: TestTube,
       title: 'Health Screenings',
       description: 'Blood pressure, glucose monitoring, and cholesterol testing.',
-      color: 'from-indigo-500 to-blue-600'
+      color: 'from-indigo-500 to-blue-600',
+      image: 'https://images.pexels.com/photos/4226769/pexels-photo-4226769.jpeg?auto=compress&cs=tinysrgb&w=400'
     },
     {
       icon: Activity,
       title: 'Chronic Disease Management',
       description: 'Support for diabetes, hypertension, and other chronic conditions.',
-      color: 'from-red-500 to-orange-600'
+      color: 'from-red-500 to-orange-600',
+      image: 'https://images.pexels.com/photos/7659564/pexels-photo-7659564.jpeg?auto=compress&cs=tinysrgb&w=400'
     },
     {
       icon: Thermometer,
       title: 'Medical Equipment',
       description: 'Blood pressure monitors, thermometers, and diagnostic tools.',
-      color: 'from-cyan-500 to-teal-600'
+      color: 'from-cyan-500 to-teal-600',
+      image: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=400'
     },
     {
       icon: Baby,
       title: 'Mother & Baby Care',
       description: 'Prenatal vitamins, baby products, and maternal health support.',
-      color: 'from-pink-400 to-pink-600'
+      color: 'from-pink-400 to-pink-600',
+      image: 'https://images.pexels.com/photos/3845456/pexels-photo-3845456.jpeg?auto=compress&cs=tinysrgb&w=400'
     },
     {
       icon: Briefcase,
       title: 'Corporate Wellness',
       description: 'Health programs and pharmaceutical services for businesses.',
-      color: 'from-gray-600 to-gray-700'
+      color: 'from-gray-600 to-gray-700',
+      image: 'https://images.pexels.com/photos/5327921/pexels-photo-5327921.jpeg?auto=compress&cs=tinysrgb&w=400'
     },
   ];
 
@@ -156,7 +168,7 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 </span>
               </h1>
               <p className="text-lg md:text-xl mb-5 leading-relaxed text-teal-50">
-                Trusted by thousands for quality medications, expert consultation, and compassionate care since 2008.
+                Trusted by thousands for quality medications, expert consultation, and compassionate care.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-4">
                 <button
@@ -274,8 +286,8 @@ export default function HomePage({ onNavigate }: HomePageProps) {
                 <Clock className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Extended Hours</h3>
-                <p className="text-gray-600 dark:text-gray-300">Open 7 days a week for your convenience</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Opening Hours</h3>
+                <p className="text-gray-600 dark:text-gray-300">Monday to Saturday - 8a.m. to 8p.m.</p>
               </div>
             </div>
             <div className="flex items-start space-x-4 p-6 rounded-xl bg-green-50 dark:bg-gray-800 hover:shadow-md transition-shadow">
@@ -304,18 +316,30 @@ export default function HomePage({ onNavigate }: HomePageProps) {
             {services.map((service, index) => (
               <div
                 key={index}
-                className="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm hover:shadow-2xl transition-all hover:-translate-y-2 cursor-pointer border border-gray-100 dark:border-gray-700 overflow-hidden relative"
+                className="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-2xl transition-all hover:-translate-y-2 cursor-pointer border border-gray-100 dark:border-gray-700 overflow-hidden"
                 onClick={() => onNavigate('services')}
               >
-                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${service.color} opacity-10 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-500`}></div>
-                <div className={`bg-gradient-to-br ${service.color} w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
-                  <service.icon className="w-7 h-7 text-white" />
+                {/* Image Section - Top Half */}
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={service.image}
+                    alt={service.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                  <div className={`absolute bottom-3 left-3 bg-gradient-to-br ${service.color} w-12 h-12 rounded-xl flex items-center justify-center shadow-lg`}>
+                    <service.icon className="w-6 h-6 text-white" />
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{service.title}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{service.description}</p>
-                <div className="mt-4 flex items-center text-teal-600 dark:text-teal-400 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span>Learn more</span>
-                  <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                
+                {/* Text Section - Bottom Half */}
+                <div className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{service.title}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{service.description}</p>
+                  <div className="mt-4 flex items-center text-teal-600 dark:text-teal-400 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>Learn more</span>
+                    <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </div>
               </div>
             ))}

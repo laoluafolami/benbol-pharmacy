@@ -44,7 +44,10 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
     } else {
       setResetMessage('Password reset email sent! Check your inbox.');
       setResetEmail('');
-      setTimeout(() => setShowResetForm(false), 3000);
+      setTimeout(() => {
+        setShowResetForm(false);
+        setResetMessage('');
+      }, 3000);
     }
 
     setLoading(false);

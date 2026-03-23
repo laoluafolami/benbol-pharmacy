@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive } from 'lucide-react';
+import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive, Database } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Papa from 'papaparse';
@@ -73,9 +73,10 @@ interface PrescriptionRefill {
 
 interface AdminDashboardProps {
   onNavigateToUsers: () => void;
+  onNavigateToBackup: () => void;
 }
 
-export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProps) {
+export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState('contacts');
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
@@ -606,6 +607,15 @@ export default function AdminDashboard({ onNavigateToUsers }: AdminDashboardProp
             <p className="text-sm text-gray-600 dark:text-gray-400">Logged in as: {currentUser?.email}</p>
           </div>
           <div className="flex items-center space-x-3">
+            {(userRole === 'admin' || userRole === 'manager') && (
+              <button
+                onClick={onNavigateToBackup}
+                className="flex items-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold backdrop-blur-sm"
+              >
+                <Database className="w-5 h-5" />
+                <span>Backup & Restore</span>
+              </button>
+            )}
             <button
               onClick={onNavigateToUsers}
               className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold backdrop-blur-sm"

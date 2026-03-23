@@ -71,7 +71,7 @@ export default function AboutPage() {
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 animate-fade-in">About Us</h1>
             <p className="text-lg md:text-xl text-purple-50 leading-relaxed animate-fade-in">
-              Committed to excellence in pharmaceutical care since 2008
+              Committed to excellence in pharmaceutical care.
             </p>
           </div>
         </div>

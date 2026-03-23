@@ -22,21 +22,44 @@ export default function ResetPasswordPage({ onNavigate }: ResetPasswordPageProps
     // Check if we have a valid session from the password reset link
     const checkSession = async () => {
       try {
-        // First, check if there are auth tokens in the URL hash
+        // Check both hash and query params for auth tokens
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
+        const searchParams = new URLSearchParams(window.location.search);
+        
+        // Try to get tokens from either location
+        let accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+        let refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+        let type = hashParams.get('type') || searchParams.get('type');
 
-        console.log('URL hash params:', { accessToken: !!accessToken, refreshToken: !!refreshToken, type });
+        // Also check if tokens are after a # in the hash (e.g., #reset-password#access_token=...)
+        if (!accessToken && window.location.hash.includes('#access_token')) {
+          const secondHashIndex = window.location.hash.indexOf('#', 1);
+          if (secondHashIndex > 0) {
+            const tokenParams = new URLSearchParams(window.location.hash.substring(secondHashIndex + 1));
+            accessToken = tokenParams.get('access_token');
+            refreshToken = tokenParams.get('refresh_token');
+            type = tokenParams.get('type');
+          }
+        }
+
+        console.log('URL params:', { 
+          accessToken: !!accessToken, 
+          refreshToken: !!refreshToken, 
+          type,
+          hash: window.location.hash,
+          search: window.location.search,
+          pathname: window.location.pathname
+        });
 
         // If we have tokens in the URL, set the session
-        if (accessToken && refreshToken && type === 'recovery') {
+        if (accessToken && type === 'recovery') {
           console.log('Setting session from URL tokens');
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
+          const sessionData: any = { access_token: accessToken };
+          if (refreshToken) {
+            sessionData.refresh_token = refreshToken;
+          }
+          
+          const { data, error } = await supabase.auth.setSession(sessionData);
 
           if (error) {
             console.error('Error setting session:', error);

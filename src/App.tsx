@@ -17,11 +17,20 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import TermsOfUsePage from './pages/TermsOfUsePage';
 import InvoiceGeneratorPage from './pages/InvoiceGeneratorPage';
+import BackupRestorePage from './pages/BackupRestorePage';
 
 function App() {
   const getPageFromHash = () => {
     const hash = window.location.hash.slice(1);
-    return hash || 'home';
+    
+    // Check if this is a password reset link (has access_token and type=recovery in hash)
+    if (hash.includes('access_token') && hash.includes('type=recovery')) {
+      return 'reset-password';
+    }
+    
+    // Extract page name (before any # or & characters)
+    const pageName = hash.split(/[#&]/)[0];
+    return pageName || 'home';
   };
 
   const [currentPage, setCurrentPage] = useState(getPageFromHash());
@@ -40,11 +49,27 @@ function App() {
   useEffect(() => {
     const urlHash = window.location.hash;
     const pathname = window.location.pathname;
+    const search = window.location.search;
     
     // Check if this is a password reset callback from Supabase
-    if (urlHash.includes('type=recovery') || pathname === '/reset-password' || urlHash.includes('access_token')) {
+    // Supabase can send tokens in hash (#access_token=...) or query params (?access_token=...)
+    if (urlHash.includes('type=recovery') || 
+        urlHash.includes('access_token') || 
+        search.includes('type=recovery') || 
+        search.includes('access_token') ||
+        pathname === '/reset-password') {
       console.log('Detected password reset flow, navigating to reset-password page');
-      setCurrentPage('reset-password');
+      
+      // If tokens are in query params, move them to hash for SPA routing
+      if (search.includes('access_token') || search.includes('type=recovery')) {
+        const searchParams = new URLSearchParams(search);
+        const hashFragment = Array.from(searchParams.entries())
+          .map(([key, value]) => `${key}=${value}`)
+          .join('&');
+        window.location.hash = `reset-password#${hashFragment}`;
+      } else {
+        setCurrentPage('reset-password');
+      }
     }
   }, []);
 
@@ -65,7 +90,7 @@ function App() {
       case 'blog':
         return <BlogPage />;
       case 'faq':
-        return <FAQPage />;
+        return <FAQPage onNavigate={handleNavigate} />;
       case 'refill':
         return <RefillFormPage onNavigate={handleNavigate} />;
       case 'appointment':
@@ -80,17 +105,22 @@ function App() {
         return <AdminDashboard
           onNavigateToUsers={() => setCurrentPage('admin-users')}
           onNavigateToInvoice={() => setCurrentPage('invoice')}
+          onNavigateToBackup={() => setCurrentPage('backup-restore')}
         />;
       case 'admin-users':
         return <AdminUsersPage onNavigateBack={() => setCurrentPage('admin')} />;
       case 'invoice':
         return <InvoiceGeneratorPage onNavigateBack={() => setCurrentPage('admin')} />;
+      case 'backup-restore':
+        return <BackupRestorePage onNavigateBack={() => setCurrentPage('admin')} />;
+      case 'reset-password':
+        return <ResetPasswordPage onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
   };
 
-  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users' || currentPage === 'invoice';
+  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users' || currentPage === 'invoice' || currentPage === 'backup-restore' || currentPage === 'reset-password';
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">

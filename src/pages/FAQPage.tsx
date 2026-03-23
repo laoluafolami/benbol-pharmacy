@@ -1,7 +1,11 @@
 import { Plus, Minus } from 'lucide-react';
 import { useState } from 'react';
 
-export default function FAQPage() {
+interface FAQPageProps {
+  onNavigate: (page: string) => void;
+}
+
+export default function FAQPage({ onNavigate }: FAQPageProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const faqs = [
@@ -214,7 +218,10 @@ export default function FAQPage() {
               >
                 Call Us: 09167858304
               </a>
-              <button className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+              <button
+                onClick={() => onNavigate('contact')}
+                className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
                 Send a Message
               </button>
             </div>
