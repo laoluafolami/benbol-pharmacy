@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive, Database } from 'lucide-react';
+import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive, Database, RefreshCw, X, ChevronDown } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Papa from 'papaparse';
@@ -85,10 +85,10 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
   const [refills, setRefills] = useState<PrescriptionRefill[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [expandedMessageId, setExpandedMessageId] = useState<number | null>(null);
   const [expandedContactId, setExpandedContactId] = useState<number | null>(null);
-  const [expandedAppointmentId, setExpandedAppointmentId] = useState<number | null>(null);
-  const [expandedRefillId, setExpandedRefillId] = useState<number | null>(null);
+  const [selectedAppointmentDetail, setSelectedAppointmentDetail] = useState<Appointment | null>(null);
+  const [selectedRefillDetail, setSelectedRefillDetail] = useState<PrescriptionRefill | null>(null);
+  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<'admin' | 'manager' | 'viewer' | null>(null);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
@@ -204,6 +204,28 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
     const hasPermission = userRole === 'admin';
     console.log('canDelete check - userRole:', userRole, 'hasPermission:', hasPermission);
     return hasPermission;
+  };
+
+  // Group messages by session
+  const groupMessagesBySession = (msgs: ChatMessage[]) => {
+    const grouped: { [key: string]: ChatMessage[] } = {};
+    msgs.forEach(msg => {
+      if (!grouped[msg.session_id]) {
+        grouped[msg.session_id] = [];
+      }
+      grouped[msg.session_id].push(msg);
+    });
+    return Object.entries(grouped).map(([sessionId, sessionMessages]) => ({
+      sessionId,
+      messages: sessionMessages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
+      userName: sessionMessages[0]?.user_name || 'Unknown',
+      userEmail: sessionMessages[0]?.user_email || 'Unknown',
+      messageCount: sessionMessages.length,
+      lastMessage: sessionMessages[sessionMessages.length - 1]?.message || '',
+      lastMessageTime: sessionMessages[sessionMessages.length - 1]?.created_at || '',
+      hasUnread: sessionMessages.some(m => !m.is_read),
+      isArchived: sessionMessages[0]?.is_archived || false,
+    }));
   };
 
   const canMarkAsRead = () => {
@@ -458,11 +480,11 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
         cancelled: 0,
       },
       messages: {
-        total: messages.filter(item => !item.is_archived).length, // Messages don't have status
-        allTotal: messages.length,
-        unread: getUnreadCount(messages),
-        viewed: messages.filter(item => item.is_read && !item.is_archived).length,
-        archived: messages.filter(item => item.is_archived).length,
+        total: groupMessagesBySession(messages.filter(item => !item.is_archived)).length,
+        allTotal: groupMessagesBySession(messages).length,
+        unread: groupMessagesBySession(messages.filter(item => !item.is_archived)).filter(s => s.hasUnread).length,
+        viewed: groupMessagesBySession(messages.filter(item => !item.is_archived && !item.is_read)).length,
+        archived: groupMessagesBySession(messages.filter(item => item.is_archived)).length,
         completed: 0,
         cancelled: 0,
       },
@@ -622,6 +644,14 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
             >
               <Users className="w-5 h-5" />
               <span>Manage Users</span>
+            </button>
+            <button
+              onClick={refreshData}
+              className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold backdrop-blur-sm"
+              title="Refresh all data"
+            >
+              <RefreshCw className="w-5 h-5" />
+              <span>Refresh</span>
             </button>
             <button
               onClick={async () => {
@@ -823,16 +853,16 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 z-30 shadow-lg">
+      <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 z-30 shadow-lg flex justify-center">
         <div 
-          className="w-full overflow-x-auto overflow-y-hidden scrollbar-hide"
+          className="w-full overflow-x-auto overflow-y-hidden scrollbar-hide flex justify-center"
           style={{ 
             scrollbarWidth: 'none', 
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch'
           }}
         >
-          <div className="flex w-max px-4 py-2">
+          <div className="flex px-4 py-2">
             {[
               { id: 'contacts', label: 'Contact Submissions', icon: Mail, color: 'from-blue-500 to-cyan-500' },
               { id: 'appointments', label: 'Appointments', icon: Calendar, color: 'from-green-500 to-emerald-500' },
@@ -1081,11 +1111,13 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {getFilteredData(contacts).map((contact, index) => (
                           <tr key={contact.id} className={`hover:bg-opacity-75 transition-colors ${
-                            !contact.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
+                            !contact.is_read ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-l-blue-600 font-semibold' : ''
                           } ${
-                            index % 2 === 0 
+                            contact.is_read && index % 2 === 0 
                               ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
-                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                              : contact.is_read && index % 2 !== 0
+                              ? 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                              : ''
                           }`}>
                             <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">{contact.full_name}</td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words">{contact.email}</td>
@@ -1207,11 +1239,13 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {getFilteredData(subscribers).map((subscriber, index) => (
                           <tr key={subscriber.id} className={`hover:bg-opacity-75 transition-colors ${
-                            !subscriber.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
+                            !subscriber.is_read ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-l-blue-600 font-semibold' : ''
                           } ${
-                            index % 2 === 0 
+                            subscriber.is_read && index % 2 === 0 
                               ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
-                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                              : subscriber.is_read && index % 2 !== 0
+                              ? 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                              : ''
                           }`}>
                             <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium break-words">{subscriber.email}</td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{new Date(subscriber.created_at).toLocaleDateString()}</td>
@@ -1268,7 +1302,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
               </div>
             )}
 
-            {/* Chat Messages Table */}
+            {/* Chat Messages - Grouped by Session */}
             {activeTab === 'messages' && (
               <div className="relative backdrop-blur-xl bg-white/20 dark:bg-gray-800/20 rounded-2xl shadow-2xl overflow-hidden border border-white/20 dark:border-gray-700/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-gray-800/10 pointer-events-none"></div>
@@ -1278,113 +1312,133 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                     <p>No chat messages yet</p>
                   </div>
                 ) : (
-                  <div className="w-full overflow-x-auto relative z-10" style={{ WebkitOverflowScrolling: 'touch', maxHeight: '70vh', overflowY: 'auto' }}>
-                    <table className="table-auto" style={{ minWidth: '1200px', width: 'max-content' }}>
-                      <thead className="bg-gradient-to-r from-teal-500 to-blue-600 sticky top-0 z-40">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Name</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-48">Email</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-24">Sender</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-64">Message</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Session ID</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-24">Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-40">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {getFilteredData(messages).map((msg, index) => (
-                          <tr key={msg.id} className={`hover:bg-opacity-75 transition-colors ${
-                            !msg.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
-                          } ${
-                            index % 2 === 0 
-                              ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
-                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
-                          }`}>
-                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">{msg.user_name || '-'}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words">{msg.user_email || '-'}</td>
-                            <td className="px-6 py-4 text-sm whitespace-nowrap">
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                msg.sender === 'user'
-                                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                                  : 'bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300'
-                              }`}>
-                                {msg.sender}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                              <div className="max-w-xs">
-                                <button
-                                  onClick={() => setExpandedMessageId(expandedMessageId === msg.id ? null : msg.id)}
-                                  className="text-left hover:text-teal-600 dark:hover:text-teal-400 transition-colors w-full p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
-                                  title="Click to expand/collapse message"
-                                >
-                                  <div className={`${expandedMessageId === msg.id ? 'whitespace-normal break-words' : 'truncate'}`}>
-                                    {expandedMessageId === msg.id ? msg.message : msg.message.substring(0, 50) + (msg.message.length > 50 ? '...' : '')}
+                  <div className="w-full relative z-10" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                    <div className="space-y-3 p-6">
+                      {groupMessagesBySession(getFilteredData(messages)).map((session) => (
+                        <div key={session.sessionId} className={`rounded-lg border transition-all ${
+                          session.hasUnread 
+                            ? 'bg-blue-200 dark:bg-blue-800 border-blue-500 dark:border-blue-600 shadow-md' 
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                        }`}>
+                          {/* Session Summary Row */}
+                          <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-opacity-75 transition-colors"
+                            onClick={() => setExpandedSessionId(expandedSessionId === session.sessionId ? null : session.sessionId)}>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex-shrink-0">
+                                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-teal-600 text-white font-semibold text-sm">
+                                    {session.userName.charAt(0).toUpperCase()}
                                   </div>
-                                  {msg.message.length > 50 && (
-                                    <span className="ml-2 text-xs text-gray-400">
-                                      {expandedMessageId === msg.id ? '▼' : '▶'}
-                                    </span>
-                                  )}
-                                </button>
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-gray-900 dark:text-white">{session.userName}</p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">{session.userEmail}</p>
+                                </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 font-mono text-xs whitespace-nowrap">{msg.session_id?.substring(0, 12)}...</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{new Date(msg.created_at).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 text-sm whitespace-nowrap">
-                              <div className="flex items-center space-x-2">
+                            </div>
+                            <div className="flex items-center space-x-4">
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">{session.messageCount} messages</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">{new Date(session.lastMessageTime).toLocaleDateString()}</p>
+                              </div>
+                              {session.hasUnread && (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-500 text-white">
+                                  New
+                                </span>
+                              )}
+                              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${expandedSessionId === session.sessionId ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+
+                          {/* Expanded Session Details */}
+                          {expandedSessionId === session.sessionId && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/50 space-y-4">
+                              {/* Chat Thread */}
+                              <div className="space-y-3 max-h-96 overflow-y-auto">
+                                {session.messages.map((msg, idx) => (
+                                  <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[70%] rounded-lg px-3 py-2 text-sm ${
+                                      msg.sender === 'user'
+                                        ? 'bg-teal-600 text-white rounded-br-none'
+                                        : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600 rounded-bl-none'
+                                    }`}>
+                                      <p className="break-words">{msg.message}</p>
+                                      <p className={`text-xs mt-1 ${msg.sender === 'user' ? 'text-teal-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                                        {new Date(msg.created_at).toLocaleTimeString()}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Actions */}
+                              <div className="flex items-center space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 {canMarkAsRead() ? (
                                   <button
-                                    onClick={() => toggleReadStatus('chat_messages', msg.id, msg.is_read)}
+                                    onClick={() => {
+                                      session.messages.forEach(msg => {
+                                        toggleReadStatus('chat_messages', msg.id, msg.is_read);
+                                      });
+                                    }}
                                     className={`p-2 rounded-lg transition-colors ${
-                                      msg.is_read
+                                      !session.hasUnread
                                         ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200'
                                         : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 hover:bg-blue-200'
                                     }`}
-                                    title={msg.is_read ? 'Mark as unread' : 'Mark as read'}
+                                    title={session.hasUnread ? 'Mark session as read' : 'Mark session as unread'}
                                   >
                                     <Mail className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed" title="View-only access">
+                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed">
                                     <Mail className="w-4 h-4" />
                                   </div>
                                 )}
                                 {canArchive() ? (
                                   <button
-                                    onClick={() => toggleArchiveStatus('chat_messages', msg.id, msg.is_archived)}
+                                    onClick={() => {
+                                      session.messages.forEach(msg => {
+                                        toggleArchiveStatus('chat_messages', msg.id, msg.is_archived);
+                                      });
+                                    }}
                                     className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-300 hover:bg-yellow-200 transition-colors"
-                                    title={msg.is_archived ? 'Unarchive' : 'Archive'}
+                                    title={session.isArchived ? 'Unarchive session' : 'Archive session'}
                                   >
                                     <Archive className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed" title="View-only access">
+                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed">
                                     <Archive className="w-4 h-4" />
                                   </div>
                                 )}
                                 {canDelete() ? (
                                   <button
-                                    onClick={() => deleteRecord('chat_messages', msg.id)}
-                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors"
+                                    onClick={() => {
+                                      if (confirm('Delete this entire chat session?')) {
+                                        session.messages.forEach(msg => {
+                                          deleteRecord('chat_messages', msg.id);
+                                        });
+                                      }
+                                    }}
+                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors ml-auto"
                                   >
                                     <Trash2 className="w-4 h-5" />
                                   </button>
                                 ) : (
-                                  <span className="text-gray-400 dark:text-gray-600">—</span>
+                                  <span className="text-gray-400 dark:text-gray-600 ml-auto">—</span>
                                 )}
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Appointments Table */}
+            {/* Appointments Table - Compact View */}
             {activeTab === 'appointments' && (
               <div className="relative backdrop-blur-xl bg-white/20 dark:bg-gray-800/20 rounded-2xl shadow-2xl overflow-hidden border border-white/20 dark:border-gray-700/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-gray-800/10 pointer-events-none"></div>
@@ -1394,63 +1448,55 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                     <p>No appointments yet</p>
                   </div>
                 ) : (
-                  <div className="w-full overflow-x-auto relative z-10" style={{ WebkitOverflowScrolling: 'touch', maxHeight: '70vh', overflowY: 'auto' }}>
-                    <table className="table-auto" style={{ minWidth: '1600px', width: 'max-content' }}>
-                      <thead className="bg-gradient-to-r from-teal-500 to-blue-600 sticky top-0 z-40">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Name</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-48">Email</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Phone</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Service Type</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Preferred Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Preferred Time</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-64">Message</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-24">Status</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-24">Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-40">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {getFilteredData(appointments).map((appointment, index) => (
-                          <tr key={appointment.id} className={`hover:bg-opacity-75 transition-colors ${
-                            !appointment.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
-                          } ${
-                            index % 2 === 0 
-                              ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
-                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
-                          }`}>
-                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">{appointment.full_name}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words">{appointment.email}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{appointment.phone}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words max-w-xs">{appointment.service_type}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{new Date(appointment.preferred_date).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{appointment.preferred_time}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                              <div className="max-w-xs">
-                                <button
-                                  onClick={() => setExpandedAppointmentId(expandedAppointmentId === appointment.id ? null : appointment.id)}
-                                  className="text-left hover:text-teal-600 dark:hover:text-teal-400 transition-colors w-full p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
-                                  title="Click to expand/collapse message"
-                                >
-                                  <div className={`${expandedAppointmentId === appointment.id ? 'whitespace-normal break-words' : 'truncate'}`}>
-                                    {expandedAppointmentId === appointment.id ? appointment.message : appointment.message.substring(0, 50) + (appointment.message.length > 50 ? '...' : '')}
-                                  </div>
-                                  {appointment.message.length > 50 && (
-                                    <span className="ml-2 text-xs text-gray-400">
-                                      {expandedAppointmentId === appointment.id ? '▼' : '▶'}
-                                    </span>
-                                  )}
-                                </button>
+                  <div className="w-full relative z-10" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                    <div className="space-y-3 p-6">
+                      {getFilteredData(appointments).map((appointment) => (
+                        <div key={appointment.id} className={`rounded-lg border transition-all ${
+                          !appointment.is_read 
+                            ? 'bg-blue-200 dark:bg-blue-800 border-blue-500 dark:border-blue-600 shadow-md' 
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                        }`}>
+                          {/* Compact Row */}
+                          <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-opacity-75 transition-colors"
+                            onClick={() => setSelectedAppointmentDetail(selectedAppointmentDetail?.id === appointment.id ? null : appointment)}>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div>
+                                  <p className="font-semibold text-gray-900 dark:text-white">{appointment.full_name}</p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">{appointment.email}</p>
+                                </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm whitespace-nowrap">
+                            </div>
+                            <div className="flex items-center space-x-4">
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">{new Date(appointment.preferred_date).toLocaleDateString()}</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">{appointment.preferred_time}</p>
+                              </div>
                               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(appointment.status)}`}>
                                 {appointment.status || 'pending'}
                               </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{new Date(appointment.created_at).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 text-sm whitespace-nowrap">
-                              <div className="flex items-center space-x-2">
+                              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${selectedAppointmentDetail?.id === appointment.id ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+
+                          {/* Expanded Details */}
+                          {selectedAppointmentDetail?.id === appointment.id && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/50 space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Service Type</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{appointment.service_type}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Phone</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{appointment.phone}</p>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Message</p>
+                                <p className="text-sm text-gray-900 dark:text-white mt-1">{appointment.message}</p>
+                              </div>
+                              <div className="flex items-center space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 {canMarkAsRead() ? (
                                   <button
                                     onClick={() => toggleReadStatus('appointments', appointment.id, appointment.is_read)}
@@ -1464,7 +1510,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <Mail className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed" title="View-only access">
+                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed">
                                     <Mail className="w-4 h-4" />
                                   </div>
                                 )}
@@ -1477,7 +1523,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <Archive className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed" title="View-only access">
+                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed">
                                     <Archive className="w-4 h-4" />
                                   </div>
                                 )}
@@ -1493,32 +1539,32 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <option value="cancelled">Cancelled</option>
                                   </select>
                                 ) : (
-                                  <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-500 cursor-not-allowed">
+                                  <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-500">
                                     {appointment.status || 'pending'}
                                   </span>
                                 )}
                                 {canDelete() ? (
                                   <button
                                     onClick={() => deleteRecord('appointments', appointment.id)}
-                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors"
+                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors ml-auto"
                                   >
                                     <Trash2 className="w-4 h-5" />
                                   </button>
                                 ) : (
-                                  <span className="text-gray-400 dark:text-gray-600">—</span>
+                                  <span className="text-gray-400 dark:text-gray-600 ml-auto">—</span>
                                 )}
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Prescription Refills Table */}
+            {/* Prescription Refills Table - Compact View */}
             {activeTab === 'refills' && (
               <div className="relative backdrop-blur-xl bg-white/20 dark:bg-gray-800/20 rounded-2xl shadow-2xl overflow-hidden border border-white/20 dark:border-gray-700/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-gray-800/10 pointer-events-none"></div>
@@ -1528,63 +1574,63 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                     <p>No prescription refills yet</p>
                   </div>
                 ) : (
-                  <div className="w-full overflow-x-auto relative z-10" style={{ WebkitOverflowScrolling: 'touch', maxHeight: '70vh', overflowY: 'auto' }}>
-                    <table className="table-auto" style={{ minWidth: '1600px', width: 'max-content' }}>
-                      <thead className="bg-gradient-to-r from-teal-500 to-blue-600 sticky top-0 z-40">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Name</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-48">Email</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Phone</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Prescription #</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-40">Medication</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Doctor</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-64">Notes</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-24">Status</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-24">Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-40">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {getFilteredData(refills).map((refill, index) => (
-                          <tr key={refill.id} className={`hover:bg-opacity-75 transition-colors ${
-                            !refill.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
-                          } ${
-                            index % 2 === 0 
-                              ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
-                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
-                          }`}>
-                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">{refill.full_name}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words">{refill.email}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{refill.phone}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{refill.prescription_number || '-'}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words max-w-xs">{refill.medication_name}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words max-w-xs">{refill.prescribing_doctor || '-'}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                              <div className="max-w-xs">
-                                <button
-                                  onClick={() => setExpandedRefillId(expandedRefillId === refill.id ? null : refill.id)}
-                                  className="text-left hover:text-teal-600 dark:hover:text-teal-400 transition-colors w-full p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
-                                  title="Click to expand/collapse notes"
-                                >
-                                  <div className={`${expandedRefillId === refill.id ? 'whitespace-normal break-words' : 'truncate'}`}>
-                                    {expandedRefillId === refill.id ? refill.additional_notes : refill.additional_notes.substring(0, 50) + (refill.additional_notes.length > 50 ? '...' : '')}
-                                  </div>
-                                  {refill.additional_notes.length > 50 && (
-                                    <span className="ml-2 text-xs text-gray-400">
-                                      {expandedRefillId === refill.id ? '▼' : '▶'}
-                                    </span>
-                                  )}
-                                </button>
+                  <div className="w-full relative z-10" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                    <div className="space-y-3 p-6">
+                      {getFilteredData(refills).map((refill) => (
+                        <div key={refill.id} className={`rounded-lg border transition-all ${
+                          !refill.is_read 
+                            ? 'bg-blue-200 dark:bg-blue-800 border-blue-500 dark:border-blue-600 shadow-md' 
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                        }`}>
+                          {/* Compact Row */}
+                          <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-opacity-75 transition-colors"
+                            onClick={() => setSelectedRefillDetail(selectedRefillDetail?.id === refill.id ? null : refill)}>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div>
+                                  <p className="font-semibold text-gray-900 dark:text-white">{refill.full_name}</p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">{refill.email}</p>
+                                </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm whitespace-nowrap">
+                            </div>
+                            <div className="flex items-center space-x-4">
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">{refill.medication_name}</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">{new Date(refill.created_at).toLocaleDateString()}</p>
+                              </div>
                               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(refill.status)}`}>
                                 {refill.status || 'pending'}
                               </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{new Date(refill.created_at).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 text-sm whitespace-nowrap">
-                              <div className="flex items-center space-x-2">
+                              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${selectedRefillDetail?.id === refill.id ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+
+                          {/* Expanded Details */}
+                          {selectedRefillDetail?.id === refill.id && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/50 space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Prescription #</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{refill.prescription_number || '-'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Phone</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{refill.phone}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Prescribing Doctor</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{refill.prescribing_doctor || '-'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Medication</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{refill.medication_name}</p>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Additional Notes</p>
+                                <p className="text-sm text-gray-900 dark:text-white mt-1">{refill.additional_notes}</p>
+                              </div>
+                              <div className="flex items-center space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 {canMarkAsRead() ? (
                                   <button
                                     onClick={() => toggleReadStatus('prescription_refills', refill.id, refill.is_read)}
@@ -1598,7 +1644,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <Mail className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed" title="View-only access">
+                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed">
                                     <Mail className="w-4 h-4" />
                                   </div>
                                 )}
@@ -1611,7 +1657,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <Archive className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed" title="View-only access">
+                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed">
                                     <Archive className="w-4 h-4" />
                                   </div>
                                 )}
@@ -1627,26 +1673,26 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <option value="cancelled">Cancelled</option>
                                   </select>
                                 ) : (
-                                  <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-500 cursor-not-allowed">
+                                  <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-500">
                                     {refill.status || 'pending'}
                                   </span>
                                 )}
                                 {canDelete() ? (
                                   <button
                                     onClick={() => deleteRecord('prescription_refills', refill.id)}
-                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors"
+                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors ml-auto"
                                   >
                                     <Trash2 className="w-4 h-5" />
                                   </button>
                                 ) : (
-                                  <span className="text-gray-400 dark:text-gray-600">—</span>
+                                  <span className="text-gray-400 dark:text-gray-600 ml-auto">—</span>
                                 )}
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
