@@ -311,7 +311,7 @@ export default function AdminUsersPage({ onNavigateBack }: AdminUsersPageProps) 
                         className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                       >
                         <option value="viewer">Viewer (Read-only)</option>
-                        <option value="manager">Manager (Edit & Delete)</option>
+                        <option value="manager">Manager (Edit & Archive)</option>
                         <option value="admin">Admin (Full Access)</option>
                       </select>
                     </div>

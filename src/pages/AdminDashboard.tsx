@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive, Database, RefreshCw } from 'lucide-react';
+import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive, Database, RefreshCw, X, ChevronDown } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Papa from 'papaparse';
@@ -87,8 +87,8 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [expandedMessageId, setExpandedMessageId] = useState<number | null>(null);
   const [expandedContactId, setExpandedContactId] = useState<number | null>(null);
-  const [expandedAppointmentId, setExpandedAppointmentId] = useState<number | null>(null);
-  const [expandedRefillId, setExpandedRefillId] = useState<number | null>(null);
+  const [selectedAppointmentDetail, setSelectedAppointmentDetail] = useState<Appointment | null>(null);
+  const [selectedRefillDetail, setSelectedRefillDetail] = useState<PrescriptionRefill | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userRole, setUserRole] = useState<'admin' | 'manager' | 'viewer' | null>(null);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
@@ -1089,11 +1089,13 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {getFilteredData(contacts).map((contact, index) => (
                           <tr key={contact.id} className={`hover:bg-opacity-75 transition-colors ${
-                            !contact.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
+                            !contact.is_read ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-l-blue-600 font-semibold' : ''
                           } ${
-                            index % 2 === 0 
+                            contact.is_read && index % 2 === 0 
                               ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
-                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                              : contact.is_read && index % 2 !== 0
+                              ? 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                              : ''
                           }`}>
                             <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">{contact.full_name}</td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words">{contact.email}</td>
@@ -1215,11 +1217,13 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {getFilteredData(subscribers).map((subscriber, index) => (
                           <tr key={subscriber.id} className={`hover:bg-opacity-75 transition-colors ${
-                            !subscriber.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
+                            !subscriber.is_read ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-l-blue-600 font-semibold' : ''
                           } ${
-                            index % 2 === 0 
+                            subscriber.is_read && index % 2 === 0 
                               ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
-                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                              : subscriber.is_read && index % 2 !== 0
+                              ? 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                              : ''
                           }`}>
                             <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium break-words">{subscriber.email}</td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{new Date(subscriber.created_at).toLocaleDateString()}</td>
@@ -1302,11 +1306,13 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {getFilteredData(messages).map((msg, index) => (
                           <tr key={msg.id} className={`hover:bg-opacity-75 transition-colors ${
-                            !msg.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
+                            !msg.is_read ? 'bg-blue-200 dark:bg-blue-800 border-l-4 border-l-blue-600 font-semibold' : ''
                           } ${
-                            index % 2 === 0 
+                            msg.is_read && index % 2 === 0 
                               ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
-                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                              : msg.is_read && index % 2 !== 0
+                              ? 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
+                              : ''
                           }`}>
                             <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">{msg.user_name || '-'}</td>
                             <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words">{msg.user_email || '-'}</td>
@@ -1392,7 +1398,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
               </div>
             )}
 
-            {/* Appointments Table */}
+            {/* Appointments Table - Compact View */}
             {activeTab === 'appointments' && (
               <div className="relative backdrop-blur-xl bg-white/20 dark:bg-gray-800/20 rounded-2xl shadow-2xl overflow-hidden border border-white/20 dark:border-gray-700/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-gray-800/10 pointer-events-none"></div>
@@ -1402,63 +1408,55 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                     <p>No appointments yet</p>
                   </div>
                 ) : (
-                  <div className="w-full overflow-x-auto relative z-10" style={{ WebkitOverflowScrolling: 'touch', maxHeight: '70vh', overflowY: 'auto' }}>
-                    <table className="table-auto" style={{ minWidth: '1600px', width: 'max-content' }}>
-                      <thead className="bg-gradient-to-r from-teal-500 to-blue-600 sticky top-0 z-40">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Name</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-48">Email</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Phone</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Service Type</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Preferred Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Preferred Time</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-64">Message</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-24">Status</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-24">Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-40">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {getFilteredData(appointments).map((appointment, index) => (
-                          <tr key={appointment.id} className={`hover:bg-opacity-75 transition-colors ${
-                            !appointment.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
-                          } ${
-                            index % 2 === 0 
-                              ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
-                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
-                          }`}>
-                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">{appointment.full_name}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words">{appointment.email}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{appointment.phone}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words max-w-xs">{appointment.service_type}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{new Date(appointment.preferred_date).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{appointment.preferred_time}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                              <div className="max-w-xs">
-                                <button
-                                  onClick={() => setExpandedAppointmentId(expandedAppointmentId === appointment.id ? null : appointment.id)}
-                                  className="text-left hover:text-teal-600 dark:hover:text-teal-400 transition-colors w-full p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
-                                  title="Click to expand/collapse message"
-                                >
-                                  <div className={`${expandedAppointmentId === appointment.id ? 'whitespace-normal break-words' : 'truncate'}`}>
-                                    {expandedAppointmentId === appointment.id ? appointment.message : appointment.message.substring(0, 50) + (appointment.message.length > 50 ? '...' : '')}
-                                  </div>
-                                  {appointment.message.length > 50 && (
-                                    <span className="ml-2 text-xs text-gray-400">
-                                      {expandedAppointmentId === appointment.id ? '▼' : '▶'}
-                                    </span>
-                                  )}
-                                </button>
+                  <div className="w-full relative z-10" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                    <div className="space-y-3 p-6">
+                      {getFilteredData(appointments).map((appointment) => (
+                        <div key={appointment.id} className={`rounded-lg border transition-all ${
+                          !appointment.is_read 
+                            ? 'bg-blue-200 dark:bg-blue-800 border-blue-500 dark:border-blue-600 shadow-md' 
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                        }`}>
+                          {/* Compact Row */}
+                          <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-opacity-75 transition-colors"
+                            onClick={() => setSelectedAppointmentDetail(selectedAppointmentDetail?.id === appointment.id ? null : appointment)}>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div>
+                                  <p className="font-semibold text-gray-900 dark:text-white">{appointment.full_name}</p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">{appointment.email}</p>
+                                </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm whitespace-nowrap">
+                            </div>
+                            <div className="flex items-center space-x-4">
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">{new Date(appointment.preferred_date).toLocaleDateString()}</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">{appointment.preferred_time}</p>
+                              </div>
                               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(appointment.status)}`}>
                                 {appointment.status || 'pending'}
                               </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{new Date(appointment.created_at).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 text-sm whitespace-nowrap">
-                              <div className="flex items-center space-x-2">
+                              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${selectedAppointmentDetail?.id === appointment.id ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+
+                          {/* Expanded Details */}
+                          {selectedAppointmentDetail?.id === appointment.id && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/50 space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Service Type</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{appointment.service_type}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Phone</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{appointment.phone}</p>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Message</p>
+                                <p className="text-sm text-gray-900 dark:text-white mt-1">{appointment.message}</p>
+                              </div>
+                              <div className="flex items-center space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 {canMarkAsRead() ? (
                                   <button
                                     onClick={() => toggleReadStatus('appointments', appointment.id, appointment.is_read)}
@@ -1472,7 +1470,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <Mail className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed" title="View-only access">
+                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed">
                                     <Mail className="w-4 h-4" />
                                   </div>
                                 )}
@@ -1485,7 +1483,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <Archive className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed" title="View-only access">
+                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed">
                                     <Archive className="w-4 h-4" />
                                   </div>
                                 )}
@@ -1501,32 +1499,32 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <option value="cancelled">Cancelled</option>
                                   </select>
                                 ) : (
-                                  <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-500 cursor-not-allowed">
+                                  <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-500">
                                     {appointment.status || 'pending'}
                                   </span>
                                 )}
                                 {canDelete() ? (
                                   <button
                                     onClick={() => deleteRecord('appointments', appointment.id)}
-                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors"
+                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors ml-auto"
                                   >
                                     <Trash2 className="w-4 h-5" />
                                   </button>
                                 ) : (
-                                  <span className="text-gray-400 dark:text-gray-600">—</span>
+                                  <span className="text-gray-400 dark:text-gray-600 ml-auto">—</span>
                                 )}
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Prescription Refills Table */}
+            {/* Prescription Refills Table - Compact View */}
             {activeTab === 'refills' && (
               <div className="relative backdrop-blur-xl bg-white/20 dark:bg-gray-800/20 rounded-2xl shadow-2xl overflow-hidden border border-white/20 dark:border-gray-700/50">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-gray-800/10 pointer-events-none"></div>
@@ -1536,63 +1534,63 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                     <p>No prescription refills yet</p>
                   </div>
                 ) : (
-                  <div className="w-full overflow-x-auto relative z-10" style={{ WebkitOverflowScrolling: 'touch', maxHeight: '70vh', overflowY: 'auto' }}>
-                    <table className="table-auto" style={{ minWidth: '1600px', width: 'max-content' }}>
-                      <thead className="bg-gradient-to-r from-teal-500 to-blue-600 sticky top-0 z-40">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Name</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-48">Email</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Phone</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Prescription #</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-40">Medication</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-32">Doctor</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-64">Notes</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-24">Status</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-24">Date</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-white whitespace-nowrap min-w-40">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {getFilteredData(refills).map((refill, index) => (
-                          <tr key={refill.id} className={`hover:bg-opacity-75 transition-colors ${
-                            !refill.is_read ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-blue-500' : ''
-                          } ${
-                            index % 2 === 0 
-                              ? 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700' 
-                              : 'bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30'
-                          }`}>
-                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">{refill.full_name}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words">{refill.email}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{refill.phone}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{refill.prescription_number || '-'}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words max-w-xs">{refill.medication_name}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 break-words max-w-xs">{refill.prescribing_doctor || '-'}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                              <div className="max-w-xs">
-                                <button
-                                  onClick={() => setExpandedRefillId(expandedRefillId === refill.id ? null : refill.id)}
-                                  className="text-left hover:text-teal-600 dark:hover:text-teal-400 transition-colors w-full p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
-                                  title="Click to expand/collapse notes"
-                                >
-                                  <div className={`${expandedRefillId === refill.id ? 'whitespace-normal break-words' : 'truncate'}`}>
-                                    {expandedRefillId === refill.id ? refill.additional_notes : refill.additional_notes.substring(0, 50) + (refill.additional_notes.length > 50 ? '...' : '')}
-                                  </div>
-                                  {refill.additional_notes.length > 50 && (
-                                    <span className="ml-2 text-xs text-gray-400">
-                                      {expandedRefillId === refill.id ? '▼' : '▶'}
-                                    </span>
-                                  )}
-                                </button>
+                  <div className="w-full relative z-10" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                    <div className="space-y-3 p-6">
+                      {getFilteredData(refills).map((refill) => (
+                        <div key={refill.id} className={`rounded-lg border transition-all ${
+                          !refill.is_read 
+                            ? 'bg-blue-200 dark:bg-blue-800 border-blue-500 dark:border-blue-600 shadow-md' 
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                        }`}>
+                          {/* Compact Row */}
+                          <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-opacity-75 transition-colors"
+                            onClick={() => setSelectedRefillDetail(selectedRefillDetail?.id === refill.id ? null : refill)}>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div>
+                                  <p className="font-semibold text-gray-900 dark:text-white">{refill.full_name}</p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">{refill.email}</p>
+                                </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm whitespace-nowrap">
+                            </div>
+                            <div className="flex items-center space-x-4">
+                              <div className="text-right">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">{refill.medication_name}</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">{new Date(refill.created_at).toLocaleDateString()}</p>
+                              </div>
                               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(refill.status)}`}>
                                 {refill.status || 'pending'}
                               </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{new Date(refill.created_at).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 text-sm whitespace-nowrap">
-                              <div className="flex items-center space-x-2">
+                              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${selectedRefillDetail?.id === refill.id ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+
+                          {/* Expanded Details */}
+                          {selectedRefillDetail?.id === refill.id && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/50 space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Prescription #</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{refill.prescription_number || '-'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Phone</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{refill.phone}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Prescribing Doctor</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{refill.prescribing_doctor || '-'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Medication</p>
+                                  <p className="text-sm text-gray-900 dark:text-white mt-1">{refill.medication_name}</p>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Additional Notes</p>
+                                <p className="text-sm text-gray-900 dark:text-white mt-1">{refill.additional_notes}</p>
+                              </div>
+                              <div className="flex items-center space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                                 {canMarkAsRead() ? (
                                   <button
                                     onClick={() => toggleReadStatus('prescription_refills', refill.id, refill.is_read)}
@@ -1606,7 +1604,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <Mail className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed" title="View-only access">
+                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed">
                                     <Mail className="w-4 h-4" />
                                   </div>
                                 )}
@@ -1619,7 +1617,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <Archive className="w-4 h-4" />
                                   </button>
                                 ) : (
-                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed" title="View-only access">
+                                  <div className="p-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-400 cursor-not-allowed">
                                     <Archive className="w-4 h-4" />
                                   </div>
                                 )}
@@ -1635,26 +1633,26 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                     <option value="cancelled">Cancelled</option>
                                   </select>
                                 ) : (
-                                  <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-500 cursor-not-allowed">
+                                  <span className="px-2 py-1 rounded-lg text-xs font-medium bg-gray-200 dark:bg-gray-600 text-gray-500">
                                     {refill.status || 'pending'}
                                   </span>
                                 )}
                                 {canDelete() ? (
                                   <button
                                     onClick={() => deleteRecord('prescription_refills', refill.id)}
-                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors"
+                                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors ml-auto"
                                   >
                                     <Trash2 className="w-4 h-5" />
                                   </button>
                                 ) : (
-                                  <span className="text-gray-400 dark:text-gray-600">—</span>
+                                  <span className="text-gray-400 dark:text-gray-600 ml-auto">—</span>
                                 )}
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
