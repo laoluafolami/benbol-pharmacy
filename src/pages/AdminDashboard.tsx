@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive, Database } from 'lucide-react';
+import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive, Database, RefreshCw } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Papa from 'papaparse';
@@ -622,6 +622,14 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
             >
               <Users className="w-5 h-5" />
               <span>Manage Users</span>
+            </button>
+            <button
+              onClick={refreshData}
+              className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold backdrop-blur-sm"
+              title="Refresh all data"
+            >
+              <RefreshCw className="w-5 h-5" />
+              <span>Refresh</span>
             </button>
             <button
               onClick={async () => {
