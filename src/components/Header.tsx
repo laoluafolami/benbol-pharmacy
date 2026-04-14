@@ -40,8 +40,8 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             </div>
             <div className="flex items-center space-x-2">
                 <Phone className="w-4 h-4" />
-                <a href="tel:09167858304" className="font-semibold hover:text-yellow-300 transition-colors">
-                  09167858304
+                <a href="tel:09167858034" className="font-semibold hover:text-yellow-300 transition-colors">
+                  09167858034
                 </a>
               </div>
           </div>
@@ -267,7 +267,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             </button>
             
             <a
-              href="tel:09167858304"
+              href="tel:09167858034"
               className="group relative flex items-center justify-center space-x-3 px-6 py-4 text-white font-bold border-2 border-transparent rounded-2xl transition-all duration-300 overflow-hidden"
             >
               {/* Animated Background */}
@@ -281,7 +281,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
               
               {/* Content */}
               <Phone className="w-5 h-5 relative z-10" />
-              <span className="relative z-10">Call: 09167858304</span>
+              <span className="relative z-10">Call: 09167858034</span>
               
               {/* Outer Glow */}
               <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 rounded-2xl opacity-0 group-hover:opacity-30 blur-sm transition-all duration-300 -z-10"></div>

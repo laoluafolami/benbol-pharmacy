@@ -92,9 +92,28 @@ export const updatePassword = async (newPassword: string) => {
   }
 };
 
-// Create admin user with password
+// Create admin user with password (only admins can do this)
 export const createAdminUser = async (email: string, password: string, role: 'admin' | 'manager' | 'viewer' = 'viewer') => {
   try {
+    // Get current user
+    const { user: currentUser } = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error('Not authenticated');
+    }
+
+    // Check if current user is admin
+    const { data: currentUserData, error: roleCheckError } = await supabase
+      .from('admin_users')
+      .select('role')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+
+    if (roleCheckError) throw roleCheckError;
+
+    if (!currentUserData || currentUserData.role !== 'admin') {
+      throw new Error('Only admins can create new users');
+    }
+
     // Sign up the user with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -139,9 +158,29 @@ export const getAdminUsers = async () => {
   }
 };
 
-// Update admin user role
+// Update admin user role (only admins can do this)
 export const updateAdminRole = async (userId: string, role: 'admin' | 'manager' | 'viewer') => {
   try {
+    // Get current user
+    const { user: currentUser } = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error('Not authenticated');
+    }
+
+    // Check if current user is admin
+    const { data: currentUserData, error: roleCheckError } = await supabase
+      .from('admin_users')
+      .select('role')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+
+    if (roleCheckError) throw roleCheckError;
+
+    if (!currentUserData || currentUserData.role !== 'admin') {
+      throw new Error('Only admins can update user roles');
+    }
+
+    // Update the role
     const { data, error } = await supabase
       .from('admin_users')
       .update({ role })
@@ -154,9 +193,29 @@ export const updateAdminRole = async (userId: string, role: 'admin' | 'manager' 
   }
 };
 
-// Delete admin user
+// Delete admin user (only admins can do this)
 export const deleteAdminUser = async (userId: string) => {
   try {
+    // Get current user
+    const { user: currentUser } = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error('Not authenticated');
+    }
+
+    // Check if current user is admin
+    const { data: currentUserData, error: roleCheckError } = await supabase
+      .from('admin_users')
+      .select('role')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+
+    if (roleCheckError) throw roleCheckError;
+
+    if (!currentUserData || currentUserData.role !== 'admin') {
+      throw new Error('Only admins can delete users');
+    }
+
+    // Delete the user
     const { data, error } = await supabase
       .from('admin_users')
       .delete()

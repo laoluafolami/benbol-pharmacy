@@ -1,5 +1,6 @@
 import { Pill, Stethoscope, Heart, Users, Accessibility, Sparkles, ArrowRight, Phone, Clock, Shield, Syringe, TestTube, Activity, Thermometer, Baby, Briefcase } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { keepDatabaseAlive } from '../lib/keepAlive';
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
@@ -32,6 +33,10 @@ export default function HomePage({ onNavigate }: HomePageProps) {
   ];
 
   useEffect(() => {
+    // Keep database alive on page load
+    keepDatabaseAlive();
+
+    // Carousel rotation
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % heroImages.length);
     }, 5000);
@@ -437,11 +442,11 @@ export default function HomePage({ onNavigate }: HomePageProps) {
           <p className="text-xl mb-8 text-teal-50">Our team is here to assist you with all your pharmaceutical needs</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
-              href="tel:09167858304"
+              href="tel:09167858034"
               className="bg-white text-teal-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-all inline-flex items-center justify-center space-x-2"
             >
               <Phone className="w-5 h-5" />
-              <span>Call Us: 09167858304</span>
+              <span>Call Us: 09167858034</span>
             </a>
             <button
               onClick={() => onNavigate('contact')}

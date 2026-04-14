@@ -90,8 +90,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Phone</h3>
-                    <a href="tel:09167858304" className="text-teal-600 hover:text-teal-700 text-lg font-medium">
-                      09167858304
+                    <a href="tel:09167858034" className="text-teal-600 hover:text-teal-700 text-lg font-medium">
+                      09167858034
                     </a>
                     <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">Available during business hours</p>
                   </div>
