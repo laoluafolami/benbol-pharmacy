@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logAdminLogout } from './auditLog';
 
 export interface AdminUser {
   id: string;
@@ -40,8 +41,21 @@ export const signInAdmin = async (email: string, password: string) => {
 // Sign out
 export const signOutAdmin = async () => {
   try {
+    // Get current user before signing out
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+
+    // Log logout (don't break if logging fails)
+    if (user) {
+      try {
+        await logAdminLogout(user.id, user.email || 'unknown');
+      } catch (logErr) {
+        console.error('Failed to log logout:', logErr);
+      }
+    }
+
     return { error: null };
   } catch (error) {
     return { error };
@@ -81,13 +95,37 @@ export const resetPassword = async (email: string) => {
 // Update password
 export const updatePassword = async (newPassword: string) => {
   try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword,
     });
 
     if (error) throw error;
+
+    // Log password change (don't break if logging fails)
+    if (user) {
+      try {
+        const { logPasswordChange } = await import('./auditLog');
+        await logPasswordChange(user.id, user.email || 'unknown', true);
+      } catch (logErr) {
+        console.error('Failed to log password change:', logErr);
+      }
+    }
+
     return { data, error: null };
   } catch (error) {
+    // Log failed password change attempt
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { logPasswordChange } = await import('./auditLog');
+        await logPasswordChange(user.id, user.email || 'unknown', false, (error as any)?.message);
+      }
+    } catch (logErr) {
+      console.error('Failed to log password change failure:', logErr);
+    }
     return { data: null, error };
   }
 };
@@ -180,6 +218,13 @@ export const updateAdminRole = async (userId: string, role: 'admin' | 'manager' 
       throw new Error('Only admins can update user roles');
     }
 
+    // Get the user being updated for logging
+    const { data: targetUserData } = await supabase
+      .from('admin_users')
+      .select('email')
+      .eq('id', userId)
+      .maybeSingle();
+
     // Update the role
     const { data, error } = await supabase
       .from('admin_users')
@@ -187,6 +232,22 @@ export const updateAdminRole = async (userId: string, role: 'admin' | 'manager' 
       .eq('id', userId);
 
     if (error) throw error;
+
+    // Log the role change (don't break if logging fails)
+    try {
+      const { logAdminAction } = await import('./auditLog');
+      await logAdminAction(currentUser.id, currentUser.email, {
+        action: 'update',
+        tableName: 'admin_users',
+        recordId: userId,
+        recordSummary: `Updated user role to ${role}${targetUserData ? ` for ${targetUserData.email}` : ''}`,
+        changes: { role_changed_to: role },
+        status: 'success',
+      });
+    } catch (logErr) {
+      console.error('Failed to log role change:', logErr);
+    }
+
     return { data, error: null };
   } catch (error) {
     return { data: null, error };

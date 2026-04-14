@@ -25,14 +25,18 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [filteredLogs, setFilteredLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState<'all' | 'admin' | 'action'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'admin' | 'action' | 'table'>('all');
   const [selectedAdmin, setSelectedAdmin] = useState<string>('');
   const [selectedAction, setSelectedAction] = useState<string>('');
+  const [selectedTable, setSelectedTable] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
-  // Get unique admins and actions for filters
+  // Get unique admins, actions, and tables for filters
   const uniqueAdmins = [...new Set(auditLogs.map(log => log.admin_email))];
   const uniqueActions = [...new Set(auditLogs.map(log => log.action))];
+  const uniqueTables = [...new Set(auditLogs.map(log => log.table_name))].sort();
 
   // Load audit logs
   useEffect(() => {
@@ -52,14 +56,30 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
   useEffect(() => {
     let filtered = auditLogs;
 
+    // Apply date filters
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      filtered = filtered.filter(log => new Date(log.created_at) >= start);
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(log => new Date(log.created_at) <= end);
+    }
+
+    // Apply other filters
     if (filterType === 'admin' && selectedAdmin) {
       filtered = filtered.filter(log => log.admin_email === selectedAdmin);
     } else if (filterType === 'action' && selectedAction) {
       filtered = filtered.filter(log => log.action === selectedAction);
+    } else if (filterType === 'table' && selectedTable) {
+      filtered = filtered.filter(log => log.table_name === selectedTable);
     }
 
     setFilteredLogs(filtered);
-  }, [filterType, selectedAdmin, selectedAction, auditLogs]);
+  }, [filterType, selectedAdmin, selectedAction, selectedTable, startDate, endDate, auditLogs]);
 
   // Calculate statistics
   const stats = {
@@ -191,73 +211,137 @@ export default function AdminAnalyticsPage({ onNavigate }: AdminAnalyticsPagePro
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Filters</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Filter Type
-              </label>
-              <select
-                value={filterType}
-                onChange={(e) => {
-                  setFilterType(e.target.value as any);
-                  setSelectedAdmin('');
-                  setSelectedAction('');
-                }}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="all">All Actions</option>
-                <option value="admin">By Admin</option>
-                <option value="action">By Action Type</option>
-              </select>
+          <div className="space-y-4">
+            {/* Date Range Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
             </div>
 
-            {filterType === 'admin' && (
+            {/* Filter Type and Selection */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Select Admin
+                  Filter Type
                 </label>
                 <select
-                  value={selectedAdmin}
-                  onChange={(e) => setSelectedAdmin(e.target.value)}
+                  value={filterType}
+                  onChange={(e) => {
+                    setFilterType(e.target.value as any);
+                    setSelectedAdmin('');
+                    setSelectedAction('');
+                    setSelectedTable('');
+                  }}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="">All Admins</option>
-                  {uniqueAdmins.map((admin) => (
-                    <option key={admin} value={admin}>
-                      {admin}
-                    </option>
-                  ))}
+                  <option value="all">All Actions</option>
+                  <option value="admin">By Admin</option>
+                  <option value="action">By Action Type</option>
+                  <option value="table">By Table</option>
                 </select>
               </div>
-            )}
 
-            {filterType === 'action' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Select Action
-                </label>
-                <select
-                  value={selectedAction}
-                  onChange={(e) => setSelectedAction(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              {filterType === 'admin' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Select Admin
+                  </label>
+                  <select
+                    value={selectedAdmin}
+                    onChange={(e) => setSelectedAdmin(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All Admins</option>
+                    {uniqueAdmins.map((admin) => (
+                      <option key={admin} value={admin}>
+                        {admin}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {filterType === 'action' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Select Action
+                  </label>
+                  <select
+                    value={selectedAction}
+                    onChange={(e) => setSelectedAction(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All Actions</option>
+                    {uniqueActions.map((action) => (
+                      <option key={action} value={action}>
+                        {action.charAt(0).toUpperCase() + action.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {filterType === 'table' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Select Table
+                  </label>
+                  <select
+                    value={selectedTable}
+                    onChange={(e) => setSelectedTable(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All Tables</option>
+                    {uniqueTables.map((table) => (
+                      <option key={table} value={table}>
+                        {table.replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex items-end gap-2">
+                <button
+                  onClick={loadAuditLogs}
+                  className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
                 >
-                  <option value="">All Actions</option>
-                  {uniqueActions.map((action) => (
-                    <option key={action} value={action}>
-                      {action.charAt(0).toUpperCase() + action.slice(1)}
-                    </option>
-                  ))}
-                </select>
+                  Refresh
+                </button>
+                <button
+                  onClick={() => {
+                    setStartDate('');
+                    setEndDate('');
+                    setFilterType('all');
+                    setSelectedAdmin('');
+                    setSelectedAction('');
+                    setSelectedTable('');
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors font-medium"
+                >
+                  Clear
+                </button>
               </div>
-            )}
-
-            <div className="flex items-end">
-              <button
-                onClick={loadAuditLogs}
-                className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
-              >
-                Refresh
-              </button>
             </div>
           </div>
         </div>

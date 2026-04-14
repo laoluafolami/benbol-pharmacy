@@ -256,3 +256,68 @@ export async function getAuditLogStats() {
     return null;
   }
 }
+
+
+/**
+ * Log admin login
+ */
+export async function logAdminLogin(
+  adminId: string,
+  adminEmail: string,
+  success: boolean,
+  failureReason?: string
+) {
+  try {
+    await logAdminAction(adminId, adminEmail, {
+      action: 'view',
+      tableName: 'admin_auth',
+      recordSummary: success ? `Admin login successful` : `Admin login failed: ${failureReason || 'Unknown reason'}`,
+      changes: { login_success: success, failure_reason: failureReason },
+      status: success ? 'success' : 'failed',
+    });
+  } catch (err) {
+    console.error('Error logging admin login:', err);
+  }
+}
+
+/**
+ * Log admin password change
+ */
+export async function logPasswordChange(
+  adminId: string,
+  adminEmail: string,
+  success: boolean,
+  reason?: string
+) {
+  try {
+    await logAdminAction(adminId, adminEmail, {
+      action: 'update',
+      tableName: 'admin_auth',
+      recordId: adminId,
+      recordSummary: success ? `Password changed` : `Password change failed: ${reason || 'Unknown reason'}`,
+      changes: { password_changed: success },
+      status: success ? 'success' : 'failed',
+    });
+  } catch (err) {
+    console.error('Error logging password change:', err);
+  }
+}
+
+/**
+ * Log admin logout
+ */
+export async function logAdminLogout(
+  adminId: string,
+  adminEmail: string
+) {
+  try {
+    await logAdminAction(adminId, adminEmail, {
+      action: 'view',
+      tableName: 'admin_auth',
+      recordSummary: `Admin logout`,
+      status: 'success',
+    });
+  } catch (err) {
+    console.error('Error logging admin logout:', err);
+  }
+}
