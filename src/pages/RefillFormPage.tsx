@@ -42,7 +42,7 @@ export default function RefillFormPage({ onNavigate }: RefillFormPageProps) {
         additional_notes: '',
       });
     } catch (error) {
-      setSubmitMessage('Failed to submit refill request. Please try again or call us at 09167858304.');
+      setSubmitMessage('Failed to submit refill request. Please try again or call us at 09167858034.');
     } finally {
       setLoading(false);
     }
@@ -134,7 +134,7 @@ export default function RefillFormPage({ onNavigate }: RefillFormPageProps) {
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      placeholder="09167858304"
+                      placeholder="09167858034"
                     />
                   </div>
                 </div>
@@ -250,10 +250,10 @@ export default function RefillFormPage({ onNavigate }: RefillFormPageProps) {
             <div className="mt-8 text-center">
               <p className="text-gray-600 dark:text-gray-300 mb-4">Need help or have questions?</p>
               <a
-                href="tel:09167858304"
+                href="tel:09167858034"
                 className="text-teal-600 hover:text-teal-700 font-semibold text-lg"
               >
-                Call us at 09167858304
+                Call us at 09167858034
               </a>
             </div>
           </div>

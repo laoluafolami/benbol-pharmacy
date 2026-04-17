@@ -265,10 +265,10 @@ export default function BlogPage() {
             Our pharmacists are here to provide expert guidance and answer your questions
           </p>
           <a
-            href="tel:09167858304"
+            href="tel:09167858034"
             className="inline-block bg-white text-teal-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors"
           >
-            Call Us: 09167858304
+            Call Us: 09167858034
           </a>
         </div>
       </section>

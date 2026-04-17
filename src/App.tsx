@@ -12,6 +12,7 @@ import RefillFormPage from './pages/RefillFormPage';
 import AppointmentFormPage from './pages/AppointmentFormPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsersPage from './pages/AdminUsersPage';
+import AdminAnalyticsPage from './pages/AdminAnalyticsPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
@@ -104,11 +105,13 @@ function App() {
       case 'admin':
         return <AdminDashboard
           onNavigateToUsers={() => setCurrentPage('admin-users')}
-          onNavigateToInvoice={() => setCurrentPage('invoice')}
           onNavigateToBackup={() => setCurrentPage('backup-restore')}
+          onNavigateToAnalytics={() => setCurrentPage('analytics')}
         />;
       case 'admin-users':
         return <AdminUsersPage onNavigateBack={() => setCurrentPage('admin')} />;
+      case 'analytics':
+        return <AdminAnalyticsPage onNavigate={() => setCurrentPage('admin')} />;
       case 'invoice':
         return <InvoiceGeneratorPage onNavigateBack={() => setCurrentPage('admin')} />;
       case 'backup-restore':
@@ -120,7 +123,7 @@ function App() {
     }
   };
 
-  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users' || currentPage === 'invoice' || currentPage === 'backup-restore' || currentPage === 'reset-password';
+  const isAdminPage = currentPage === 'admin' || currentPage === 'admin-users' || currentPage === 'analytics' || currentPage === 'invoice' || currentPage === 'backup-restore' || currentPage === 'reset-password';
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">

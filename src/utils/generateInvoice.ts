@@ -139,7 +139,7 @@ export function generateInvoice(data: InvoiceData) {
   doc.setFont('helvetica', 'italic');
   doc.text('Thank you for your business!', 105, 285, { align: 'center' });
   doc.text('Benbol Pharmacy | Vickie\'s Plaza, Lekki-Epe Expressway, Sangotedo, Lagos', 105, 290, { align: 'center' });
-  doc.text('Phone: 09167858304 | Email: benbolglobal@gmail.com', 105, 295, { align: 'center' });
+  doc.text('Phone: 09167858034 | Email: benbolglobal@gmail.com', 105, 295, { align: 'center' });
 
   return doc;
 }
