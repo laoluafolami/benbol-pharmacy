@@ -16,6 +16,7 @@ interface BackupData {
     contact_submissions: any[];
     newsletter_subscribers: any[];
     chat_messages: any[];
+    admin_audit_logs: any[];
   };
 }
 
@@ -72,12 +73,13 @@ export default function BackupRestorePage({ onNavigateBack }: BackupRestorePageP
 
     try {
       // Fetch all data from all tables (excluding admin_users to avoid login issues)
-      const [appointmentsRes, refillsRes, contactsRes, subscribersRes, messagesRes] = await Promise.all([
+      const [appointmentsRes, refillsRes, contactsRes, subscribersRes, messagesRes, auditLogsRes] = await Promise.all([
         supabase.from('appointments').select('*').order('created_at', { ascending: false }),
         supabase.from('prescription_refills').select('*').order('created_at', { ascending: false }),
         supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }),
         supabase.from('newsletter_subscribers').select('*').order('created_at', { ascending: false }),
         supabase.from('chat_messages').select('*').order('created_at', { ascending: false }),
+        supabase.from('admin_audit_logs').select('*').order('created_at', { ascending: false }),
       ]);
 
       // Check for errors
@@ -86,6 +88,7 @@ export default function BackupRestorePage({ onNavigateBack }: BackupRestorePageP
       if (contactsRes.error) throw contactsRes.error;
       if (subscribersRes.error) throw subscribersRes.error;
       if (messagesRes.error) throw messagesRes.error;
+      if (auditLogsRes.error) throw auditLogsRes.error;
 
       // Create backup object
       const backup: BackupData = {
@@ -97,6 +100,7 @@ export default function BackupRestorePage({ onNavigateBack }: BackupRestorePageP
           contact_submissions: contactsRes.data || [],
           newsletter_subscribers: subscribersRes.data || [],
           chat_messages: messagesRes.data || [],
+          admin_audit_logs: auditLogsRes.data || [],
         },
       };
 
@@ -117,7 +121,7 @@ export default function BackupRestorePage({ onNavigateBack }: BackupRestorePageP
 
       setMessage({ 
         type: 'success', 
-        text: `Backup created successfully! Downloaded ${totalRecords} records from 5 tables.` 
+        text: `Backup created successfully! Downloaded ${totalRecords} records from 6 tables (including analytics).` 
       });
     } catch (error) {
       console.error('Error creating backup:', error);
