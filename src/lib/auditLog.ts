@@ -321,3 +321,46 @@ export async function logAdminLogout(
     console.error('Error logging admin logout:', err);
   }
 }
+
+
+/**
+ * Generate a meaningful record summary based on table and record data
+ */
+export function generateRecordSummary(
+  tableName: string,
+  action: string,
+  recordId: string | number,
+  recordData?: any
+): string {
+  if (!recordData) {
+    return `${action.charAt(0).toUpperCase() + action.slice(1)} ${tableName.replace(/_/g, ' ')} record #${recordId}`;
+  }
+
+  // Extract meaningful identifier from record
+  let identifier = '';
+  
+  if (recordData.full_name) {
+    identifier = recordData.full_name;
+    if (recordData.email) identifier += ` (${recordData.email})`;
+  } else if (recordData.email) {
+    identifier = recordData.email;
+  } else if (recordData.user_name) {
+    identifier = recordData.user_name;
+    if (recordData.user_email) identifier += ` (${recordData.user_email})`;
+  } else if (recordData.medication_name) {
+    identifier = recordData.medication_name;
+  } else if (recordData.subject) {
+    identifier = recordData.subject;
+  } else if (recordData.message) {
+    identifier = recordData.message.substring(0, 50);
+  }
+
+  const actionText = action.charAt(0).toUpperCase() + action.slice(1);
+  const tableText = tableName.replace(/_/g, ' ');
+  
+  if (identifier) {
+    return `${actionText} ${tableText}: ${identifier}`;
+  }
+  
+  return `${actionText} ${tableText} record #${recordId}`;
+}

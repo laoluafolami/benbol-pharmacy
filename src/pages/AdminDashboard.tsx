@@ -5,7 +5,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Papa from 'papaparse';
 import { signOutAdmin, getCurrentUser } from '../lib/auth';
-import { logAdminAction } from '../lib/auditLog';
+import { logAdminAction, generateRecordSummary } from '../lib/auditLog';
 import AdminLogin from './AdminLogin';
 
 interface ContactSubmission {
@@ -294,11 +294,25 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup, 
 
       // Log the action for all user roles (admin, manager, viewer)
       if (currentUser) {
+        // Get the record data for better logging
+        let recordData: any = null;
+        if (table === 'contact_submissions') {
+          recordData = contacts.find(c => c.id === id);
+        } else if (table === 'newsletter_subscribers') {
+          recordData = subscribers.find(s => s.id === id);
+        } else if (table === 'chat_messages') {
+          recordData = messages.find(m => m.id === id);
+        } else if (table === 'appointments') {
+          recordData = appointments.find(a => a.id === id);
+        } else if (table === 'prescription_refills') {
+          recordData = refills.find(r => r.id === id);
+        }
+
         await logAdminAction(currentUser.id, currentUser.email, {
           action: 'update',
           tableName: table,
           recordId: String(id),
-          recordSummary: `Marked ${table} record #${id} as ${newReadStatus ? 'read' : 'unread'}`,
+          recordSummary: generateRecordSummary(table, 'mark as ' + (newReadStatus ? 'read' : 'unread'), id, recordData),
           changes: { is_read: newReadStatus },
           status: 'success',
         });
@@ -344,11 +358,21 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup, 
 
       // Log as a single session-level action instead of per-message
       if (currentUser) {
+        // Get user info from the first message in the session
+        const userInfo = messages.length > 0 ? {
+          user_name: messages[0].user_name,
+          user_email: messages[0].user_email,
+        } : null;
+        
+        const summary = userInfo && (userInfo.user_name || userInfo.user_email)
+          ? `Marked chat session as ${newReadStatus ? 'read' : 'unread'}: ${userInfo.user_name || 'Unknown'} (${userInfo.user_email || 'Unknown'}) - ${messages.length} message(s)`
+          : `Marked chat session as ${newReadStatus ? 'read' : 'unread'} (${messages.length} message(s))`;
+        
         await logAdminAction(currentUser.id, currentUser.email, {
           action: 'update',
           tableName: 'chat_sessions',
           recordId: sessionId,
-          recordSummary: `Marked chat session as ${newReadStatus ? 'read' : 'unread'} (${messages.length} message(s))`,
+          recordSummary: summary,
           changes: { is_read: newReadStatus, message_count: messages.length },
           status: 'success',
         });
@@ -410,11 +434,25 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup, 
 
       // Log the action for all user roles (admin, manager, viewer)
       if (currentUser) {
+        // Get the record data for better logging
+        let recordData: any = null;
+        if (table === 'contact_submissions') {
+          recordData = contacts.find(c => c.id === id);
+        } else if (table === 'newsletter_subscribers') {
+          recordData = subscribers.find(s => s.id === id);
+        } else if (table === 'chat_messages') {
+          recordData = messages.find(m => m.id === id);
+        } else if (table === 'appointments') {
+          recordData = appointments.find(a => a.id === id);
+        } else if (table === 'prescription_refills') {
+          recordData = refills.find(r => r.id === id);
+        }
+
         await logAdminAction(currentUser.id, currentUser.email, {
           action: 'update',
           tableName: table,
           recordId: String(id),
-          recordSummary: `${newArchivedStatus ? 'Archived' : 'Unarchived'} ${table} record #${id}`,
+          recordSummary: generateRecordSummary(table, newArchivedStatus ? 'archive' : 'unarchive', id, recordData),
           changes: { is_archived: newArchivedStatus },
           status: 'success',
         });
@@ -460,11 +498,21 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup, 
 
       // Log as a single session-level action instead of per-message
       if (currentUser) {
+        // Get user info from the first message in the session
+        const userInfo = messages.length > 0 ? {
+          user_name: messages[0].user_name,
+          user_email: messages[0].user_email,
+        } : null;
+        
+        const summary = userInfo && (userInfo.user_name || userInfo.user_email)
+          ? `${newArchivedStatus ? 'Archived' : 'Unarchived'} chat session: ${userInfo.user_name || 'Unknown'} (${userInfo.user_email || 'Unknown'}) - ${messages.length} message(s)`
+          : `${newArchivedStatus ? 'Archived' : 'Unarchived'} chat session with ${messages.length} message(s)`;
+        
         await logAdminAction(currentUser.id, currentUser.email, {
           action: 'update',
           tableName: 'chat_sessions',
           recordId: sessionId,
-          recordSummary: `${newArchivedStatus ? 'Archived' : 'Unarchived'} chat session with ${messages.length} message(s)`,
+          recordSummary: summary,
           changes: { is_archived: newArchivedStatus, message_count: messages.length },
           status: 'success',
         });
@@ -516,11 +564,21 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup, 
 
       // Log the action for all user roles (admin, manager, viewer)
       if (currentUser) {
+        // Get the record data for better logging
+        let recordData: any = null;
+        if (table === 'contact_submissions') {
+          recordData = contacts.find(c => c.id === id);
+        } else if (table === 'appointments') {
+          recordData = appointments.find(a => a.id === id);
+        } else if (table === 'prescription_refills') {
+          recordData = refills.find(r => r.id === id);
+        }
+
         await logAdminAction(currentUser.id, currentUser.email, {
           action: 'update',
           tableName: table,
           recordId: String(id),
-          recordSummary: `Updated ${table} record #${id} status to ${newStatus}`,
+          recordSummary: generateRecordSummary(table, `update status to ${newStatus}`, id, recordData),
           changes: { status: newStatus },
           status: 'success',
         });
@@ -650,11 +708,25 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup, 
 
       // Log the action for all user roles (admin, manager, viewer)
       if (currentUser) {
+        // Get the record data for better logging
+        let recordData: any = null;
+        if (table === 'contact_submissions') {
+          recordData = contacts.find(c => c.id === id);
+        } else if (table === 'newsletter_subscribers') {
+          recordData = subscribers.find(s => s.id === id);
+        } else if (table === 'chat_messages') {
+          recordData = messages.find(m => m.id === id);
+        } else if (table === 'appointments') {
+          recordData = appointments.find(a => a.id === id);
+        } else if (table === 'prescription_refills') {
+          recordData = refills.find(r => r.id === id);
+        }
+
         await logAdminAction(currentUser.id, currentUser.email, {
           action: 'delete',
           tableName: table,
           recordId: String(id),
-          recordSummary: `Deleted ${table} record #${id}`,
+          recordSummary: generateRecordSummary(table, 'delete', id, recordData),
           status: 'success',
         });
       }
@@ -689,11 +761,21 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup, 
 
       // Log as a single session-level action instead of per-message
       if (currentUser) {
+        // Get user info from the first message in the session
+        const userInfo = messages.length > 0 ? {
+          user_name: messages[0].user_name,
+          user_email: messages[0].user_email,
+        } : null;
+        
+        const summary = userInfo && (userInfo.user_name || userInfo.user_email)
+          ? `Deleted chat session: ${userInfo.user_name || 'Unknown'} (${userInfo.user_email || 'Unknown'}) - ${messages.length} message(s)`
+          : `Deleted chat session with ${messages.length} message(s)`;
+        
         await logAdminAction(currentUser.id, currentUser.email, {
           action: 'delete',
           tableName: 'chat_sessions',
           recordId: sessionId,
-          recordSummary: `Deleted chat session with ${messages.length} message(s)`,
+          recordSummary: summary,
           changes: { message_count: messages.length },
           status: 'success',
         });
@@ -848,6 +930,16 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup, 
                 <span>Analytics</span>
               </button>
             )}
+            <a
+              href="https://mail.hostinger.com/v2/auth/login?_user=info%40benbolpharmacy.com&_gl=1*1k97ttf*_gcl_aw*R0NMLjE3NzQ2ODgwMzIuQ2p3S0NBanctSjNPQmhCdUVpd0F3cVpfaDJFZEhWMTJmbTZoS2RORnFkczlENjBPaWh3T2ZPR1Jrb3NkdzYyeFlqYUdvaVlQRDJ3Qm1ob0NVc0lRQXZEX0J3RQ..*_gcl_au*NzU3OTk0NzU2LjE3NzE3NTg2MDYuMTI4NDcwNDgxLjE3NzYxNzQzNTAuMTc3NjE3NjA3MQ..*FPAU*NzU3OTk0NzU2LjE3NzE3NTg2MDY.*_ga*MTU1Mzc3NDI3Ni4xNzcxNzU4NjA2*_ga_73N1QWLEMH*czE3Nzg2MDMyNzgkbzQwJGcxJHQxNzc4NjAzOTg4JGoyOCRsMSRoOTU2NzM5MjA2JGRrVnM3YXowdU1ReV9mSGxuY2RtdElWRWtORTQxeHg3Y2JB*_fplc*MHdyUzNYRFJrSnllTm5jTmJ0NThzZ3FhNDV0VEdyZDhoOHoyZmE2MVptQTlnWFJpOEtRV0dJc1RaQk8zRnp1bEJSdDV6JTJCUk8zUGRKRmhOMzhNSyUyQlJyTG5NTWNHUm9WRFhJYiUyRiUyQmFNTXV1OHJMT0wwVURDZFBaT0dLUE83TFElM0QlM0Q."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold backdrop-blur-sm"
+              title="Open Benbol Pharmacy Email"
+            >
+              <Mail className="w-5 h-5" />
+              <span>Email</span>
+            </a>
             <button
               onClick={refreshData}
               className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold backdrop-blur-sm"
