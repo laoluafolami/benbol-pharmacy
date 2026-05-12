@@ -156,7 +156,7 @@ These policies are designed to comply with:
 
 ## Notes
 
-- All contact information uses your current details (benbolglobal@gmail.com, 09167858304, Sangotedo address)
+- All contact information uses your current details (benbolglobal@gmail.com, 09167858034, Sangotedo address)
 - Pages are fully responsive and work on all devices
 - Dark mode is fully supported
 - All animations are smooth and professional

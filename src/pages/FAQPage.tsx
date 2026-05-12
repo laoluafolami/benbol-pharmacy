@@ -15,7 +15,7 @@ export default function FAQPage({ onNavigate }: FAQPageProps) {
         {
           question: 'How do I refill my prescription?',
           answer:
-            'You can refill your prescription by visiting our pharmacy in person, calling us at 09167858304, or using our online prescription refill form. Please have your prescription number ready when requesting a refill.',
+            'You can refill your prescription by visiting our pharmacy in person, calling us at 09167858034, or using our online prescription refill form. Please have your prescription number ready when requesting a refill.',
         },
         {
           question: 'How long does it take to fill a prescription?',
@@ -95,7 +95,7 @@ export default function FAQPage({ onNavigate }: FAQPageProps) {
         {
           question: 'Can I speak to a pharmacist over the phone?',
           answer:
-            'Yes, our pharmacists are available to answer questions over the phone during business hours. Call us at 09167858304 and ask to speak with a pharmacist.',
+            'Yes, our pharmacists are available to answer questions over the phone during business hours. Call us at 09167858034 and ask to speak with a pharmacist.',
         },
         {
           question: 'How should I store my medications?',
@@ -213,10 +213,10 @@ export default function FAQPage({ onNavigate }: FAQPageProps) {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="tel:09167858304"
+                href="tel:09167858034"
                 className="bg-teal-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-teal-700 transition-colors"
               >
-                Call Us: 09167858304
+                Call Us: 09167858034
               </a>
               <button
                 onClick={() => onNavigate('contact')}

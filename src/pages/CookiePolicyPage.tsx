@@ -303,7 +303,7 @@ export default function CookiePolicyPage() {
                 <p>Opposite Peace Garden & Crown Estates</p>
                 <p>Sangotedo, Lagos, Nigeria</p>
                 <p className="mt-4"><strong>Email:</strong> benbolglobal@gmail.com</p>
-                <p><strong>Phone:</strong> 09167858304</p>
+                <p><strong>Phone:</strong> 09167858034</p>
               </div>
             </div>
           </section>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { signInAdmin, resetPassword } from '../lib/auth';
+import { logAdminLogin } from '../lib/auditLog';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -25,7 +26,22 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
 
     if (authError) {
       setError((authError as any)?.message || 'Failed to login. Please check your credentials.');
+      // Log failed login attempt (don't use user ID since login failed)
+      try {
+        await logAdminLogin('unknown', email, false, (authError as any)?.message || 'Invalid credentials');
+      } catch (logErr) {
+        console.error('Failed to log login attempt:', logErr);
+        // Don't break the app if logging fails
+      }
     } else if (data?.session) {
+      // Log successful login
+      try {
+        const userId = data.session.user?.id || 'unknown';
+        await logAdminLogin(userId, email, true);
+      } catch (logErr) {
+        console.error('Failed to log successful login:', logErr);
+        // Don't break the app if logging fails
+      }
       onLoginSuccess();
     }
 

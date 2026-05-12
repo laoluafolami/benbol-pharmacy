@@ -120,8 +120,8 @@ export default function Footer({ onNavigate }: FooterProps) {
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
                 <Phone className="w-5 h-5 text-teal-400 mt-0.5" />
-                <a href="tel:09167858304" className="hover:text-teal-400 transition-colors">
-                  09167858304
+                <a href="tel:09167858034" className="hover:text-teal-400 transition-colors">
+                  09167858034
                 </a>
               </li>
               <li className="flex items-start space-x-3">

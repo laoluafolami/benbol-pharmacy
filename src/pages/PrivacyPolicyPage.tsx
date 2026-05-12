@@ -100,6 +100,43 @@ export default function PrivacyPolicyPage() {
                   <li>Cookies and similar tracking technologies</li>
                 </ul>
               </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Google Analytics</h3>
+                <p className="text-gray-700 dark:text-gray-300 mb-3">We use Google Analytics to understand how visitors use our website. Google Analytics collects:</p>
+                <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300">
+                  <li>Your IP address (anonymized)</li>
+                  <li>Geographic location (country, city, region)</li>
+                  <li>Device type and browser information</li>
+                  <li>Pages visited and time spent on each page</li>
+                  <li>Referral sources and user interactions</li>
+                  <li>Session duration and bounce rate</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Google Analytics Details */}
+          <section className="mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Google Analytics Privacy</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                <strong>How Google Uses This Data:</strong> Google Analytics uses cookies to track your activity. Google may use this data to provide analytics reports, improve website functionality, detect fraud, and serve personalized advertisements.
+              </p>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                <strong>Your Privacy:</strong> Google Analytics data is anonymized and does not identify you personally. However, if you are logged into your Google account while visiting our site, Google may associate your visit with your account.
+              </p>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                <strong>Opt-Out Options:</strong> You can opt out of Google Analytics tracking by:
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300 mb-4">
+                <li>Installing the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 underline">Google Analytics Opt-out Browser Add-on</a></li>
+                <li>Disabling cookies in your browser settings</li>
+                <li>Using private/incognito browsing mode</li>
+              </ul>
+              <p className="text-gray-700 dark:text-gray-300">
+                For more information about Google Analytics and privacy, visit <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 underline">Google's Privacy Policy</a>.
+              </p>
             </div>
           </section>
 
@@ -280,7 +317,7 @@ export default function PrivacyPolicyPage() {
                 <p>Opposite Peace Garden & Crown Estates</p>
                 <p>Sangotedo, Lagos, Nigeria</p>
                 <p className="mt-4"><strong>Email:</strong> benbolglobal@gmail.com</p>
-                <p><strong>Phone:</strong> 09167858304</p>
+                <p><strong>Phone:</strong> 09167858034</p>
               </div>
             </div>
           </section>

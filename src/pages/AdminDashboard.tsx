@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive, Database, RefreshCw, X, ChevronDown } from 'lucide-react';
+import { Download, Trash2, LogOut, Mail, MessageSquare, Users, Calendar, Pill, Archive, Database, RefreshCw, BarChart3, ChevronDown } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Papa from 'papaparse';
 import { signOutAdmin, getCurrentUser } from '../lib/auth';
+import { logAdminAction } from '../lib/auditLog';
 import AdminLogin from './AdminLogin';
 
 interface ContactSubmission {
@@ -74,9 +75,10 @@ interface PrescriptionRefill {
 interface AdminDashboardProps {
   onNavigateToUsers: () => void;
   onNavigateToBackup: () => void;
+  onNavigateToAnalytics?: () => void;
 }
 
-export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }: AdminDashboardProps) {
+export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup, onNavigateToAnalytics }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState('contacts');
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
@@ -115,19 +117,22 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
         
         if (error) {
           console.error('Error fetching user role:', error);
-          // Default to admin if there's an error (for backward compatibility)
-          setUserRole('admin');
+          // Default to viewer if there's an error (for security)
+          console.warn('Defaulting to viewer role due to error');
+          setUserRole('viewer');
         } else if (adminUserData) {
-          console.log('User role:', adminUserData.role);
+          console.log('User role fetched:', adminUserData.role);
           setUserRole(adminUserData.role);
         } else {
-          // User not found in admin_users table, default to admin
-          console.log('User not in admin_users table, defaulting to admin');
-          setUserRole('admin');
+          // User not found in admin_users table, default to viewer
+          console.warn('User not in admin_users table, defaulting to viewer');
+          console.log('User ID:', user.id);
+          setUserRole('viewer');
         }
       } catch (err) {
         console.error('Exception fetching user role:', err);
-        setUserRole('admin');
+        // Default to viewer for security
+        setUserRole('viewer');
       }
       
       fetchData();
@@ -286,12 +291,74 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
         console.error('Error updating read status:', error);
         throw error;
       }
+
+      // Log the action for all user roles (admin, manager, viewer)
+      if (currentUser) {
+        await logAdminAction(currentUser.id, currentUser.email, {
+          action: 'update',
+          tableName: table,
+          recordId: String(id),
+          recordSummary: `Marked ${table} record #${id} as ${newReadStatus ? 'read' : 'unread'}`,
+          changes: { is_read: newReadStatus },
+          status: 'success',
+        });
+      }
     } catch (error) {
       console.error('Error toggling read status:', error);
       // If database update fails, refresh from server to revert optimistic update
       refreshData();
       // Show user-friendly error message
       alert('Failed to update read status. Please check your permissions and try again.');
+    }
+  };
+
+  const markChatSessionAsRead = async (sessionId: string, messages: ChatMessage[], currentStatus?: boolean) => {
+    if (!canMarkAsRead()) {
+      alert('You do not have permission to mark items as read/unread. Only Admins and Managers can perform this action.');
+      return;
+    }
+
+    try {
+      const newReadStatus = !currentStatus;
+      
+      // Update local state for all messages in the session
+      setMessages(prev => prev.map(item => 
+        messages.some(msg => msg.id === item.id) 
+          ? { ...item, is_read: newReadStatus } 
+          : item
+      ));
+
+      // Force re-render of stats cards
+      setUpdateTrigger(prev => prev + 1);
+
+      // Update all messages in the database
+      const { error } = await supabase
+        .from('chat_messages')
+        .update({ is_read: newReadStatus })
+        .in('id', messages.map(msg => msg.id));
+
+      if (error) {
+        console.error('Error updating read status:', error);
+        throw error;
+      }
+
+      // Log as a single session-level action instead of per-message
+      if (currentUser) {
+        await logAdminAction(currentUser.id, currentUser.email, {
+          action: 'update',
+          tableName: 'chat_sessions',
+          recordId: sessionId,
+          recordSummary: `Marked chat session as ${newReadStatus ? 'read' : 'unread'} (${messages.length} message(s))`,
+          changes: { is_read: newReadStatus, message_count: messages.length },
+          status: 'success',
+        });
+      }
+    } catch (error) {
+      console.error('Error marking chat session as read:', error);
+      // If database update fails, refresh from server to revert optimistic update
+      refreshData();
+      // Show user-friendly error message
+      alert('Failed to mark session as read. Please check your permissions and try again.');
     }
   };
 
@@ -340,12 +407,74 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
         console.error('Error updating archive status:', error);
         throw error;
       }
+
+      // Log the action for all user roles (admin, manager, viewer)
+      if (currentUser) {
+        await logAdminAction(currentUser.id, currentUser.email, {
+          action: 'update',
+          tableName: table,
+          recordId: String(id),
+          recordSummary: `${newArchivedStatus ? 'Archived' : 'Unarchived'} ${table} record #${id}`,
+          changes: { is_archived: newArchivedStatus },
+          status: 'success',
+        });
+      }
     } catch (error) {
       console.error('Error toggling archive status:', error);
       // If database update fails, refresh from server to revert optimistic update
       refreshData();
       // Show user-friendly error message
       alert('Failed to update archive status. Please check your permissions and try again.');
+    }
+  };
+
+  const archiveChatSession = async (sessionId: string, messages: ChatMessage[], currentStatus?: boolean) => {
+    if (!canArchive()) {
+      alert('You do not have permission to archive/unarchive items. Only Admins and Managers can perform this action.');
+      return;
+    }
+
+    try {
+      const newArchivedStatus = !currentStatus;
+      
+      // Update local state for all messages in the session
+      setMessages(prev => prev.map(item => 
+        messages.some(msg => msg.id === item.id) 
+          ? { ...item, is_archived: newArchivedStatus } 
+          : item
+      ));
+
+      // Force re-render of stats cards
+      setUpdateTrigger(prev => prev + 1);
+
+      // Update all messages in the database
+      const { error } = await supabase
+        .from('chat_messages')
+        .update({ is_archived: newArchivedStatus })
+        .in('id', messages.map(msg => msg.id));
+
+      if (error) {
+        console.error('Error updating archive status:', error);
+        throw error;
+      }
+
+      // Log as a single session-level action instead of per-message
+      if (currentUser) {
+        await logAdminAction(currentUser.id, currentUser.email, {
+          action: 'update',
+          tableName: 'chat_sessions',
+          recordId: sessionId,
+          recordSummary: `${newArchivedStatus ? 'Archived' : 'Unarchived'} chat session with ${messages.length} message(s)`,
+          changes: { is_archived: newArchivedStatus, message_count: messages.length },
+          status: 'success',
+        });
+      }
+    } catch (error) {
+      console.error('Error archiving chat session:', error);
+      // If database update fails, refresh from server to revert optimistic update
+      refreshData();
+      // Show user-friendly error message
+      alert('Failed to archive session. Please check your permissions and try again.');
     }
   };
 
@@ -383,6 +512,18 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
       if (error) {
         console.error('Error updating status:', error);
         throw error;
+      }
+
+      // Log the action for all user roles (admin, manager, viewer)
+      if (currentUser) {
+        await logAdminAction(currentUser.id, currentUser.email, {
+          action: 'update',
+          tableName: table,
+          recordId: String(id),
+          recordSummary: `Updated ${table} record #${id} status to ${newStatus}`,
+          changes: { status: newStatus },
+          status: 'success',
+        });
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -506,12 +647,63 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
         console.error('Error deleting record:', error);
         throw error;
       }
+
+      // Log the action for all user roles (admin, manager, viewer)
+      if (currentUser) {
+        await logAdminAction(currentUser.id, currentUser.email, {
+          action: 'delete',
+          tableName: table,
+          recordId: String(id),
+          recordSummary: `Deleted ${table} record #${id}`,
+          status: 'success',
+        });
+      }
       
       refreshData(); // Refresh all data after deletion
     } catch (error) {
       console.error('Error deleting record:', error);
       // Show user-friendly error message
       alert('Failed to delete record. Please check your permissions and try again.');
+    }
+  };
+
+  const deleteChatSession = async (sessionId: string, messages: ChatMessage[]) => {
+    if (!canDelete()) {
+      alert('You do not have permission to delete records. Only Admins can delete records from the database.');
+      return;
+    }
+    
+    if (!confirm('Delete this entire chat session?')) return;
+    
+    try {
+      // Delete all messages in the session
+      const { error } = await supabase
+        .from('chat_messages')
+        .delete()
+        .in('id', messages.map(msg => msg.id));
+      
+      if (error) {
+        console.error('Error deleting chat session:', error);
+        throw error;
+      }
+
+      // Log as a single session-level action instead of per-message
+      if (currentUser) {
+        await logAdminAction(currentUser.id, currentUser.email, {
+          action: 'delete',
+          tableName: 'chat_sessions',
+          recordId: sessionId,
+          recordSummary: `Deleted chat session with ${messages.length} message(s)`,
+          changes: { message_count: messages.length },
+          status: 'success',
+        });
+      }
+      
+      refreshData(); // Refresh all data after deletion
+    } catch (error) {
+      console.error('Error deleting chat session:', error);
+      // Show user-friendly error message
+      alert('Failed to delete chat session. Please check your permissions and try again.');
     }
   };
 
@@ -638,13 +830,24 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                 <span>Backup & Restore</span>
               </button>
             )}
-            <button
-              onClick={onNavigateToUsers}
-              className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold backdrop-blur-sm"
-            >
-              <Users className="w-5 h-5" />
-              <span>Manage Users</span>
-            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={onNavigateToUsers}
+                className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold backdrop-blur-sm"
+              >
+                <Users className="w-5 h-5" />
+                <span>Manage Users</span>
+              </button>
+            )}
+            {userRole === 'admin' && onNavigateToAnalytics && (
+              <button
+                onClick={onNavigateToAnalytics}
+                className="flex items-center space-x-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold backdrop-blur-sm"
+              >
+                <BarChart3 className="w-5 h-5" />
+                <span>Analytics</span>
+              </button>
+            )}
             <button
               onClick={refreshData}
               className="flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold backdrop-blur-sm"
@@ -1376,9 +1579,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                 {canMarkAsRead() ? (
                                   <button
                                     onClick={() => {
-                                      session.messages.forEach(msg => {
-                                        toggleReadStatus('chat_messages', msg.id, msg.is_read);
-                                      });
+                                      markChatSessionAsRead(session.sessionId, session.messages, session.hasUnread ? false : true);
                                     }}
                                     className={`p-2 rounded-lg transition-colors ${
                                       !session.hasUnread
@@ -1397,9 +1598,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                 {canArchive() ? (
                                   <button
                                     onClick={() => {
-                                      session.messages.forEach(msg => {
-                                        toggleArchiveStatus('chat_messages', msg.id, msg.is_archived);
-                                      });
+                                      archiveChatSession(session.sessionId, session.messages, session.isArchived);
                                     }}
                                     className="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-300 hover:bg-yellow-200 transition-colors"
                                     title={session.isArchived ? 'Unarchive session' : 'Archive session'}
@@ -1414,11 +1613,7 @@ export default function AdminDashboard({ onNavigateToUsers, onNavigateToBackup }
                                 {canDelete() ? (
                                   <button
                                     onClick={() => {
-                                      if (confirm('Delete this entire chat session?')) {
-                                        session.messages.forEach(msg => {
-                                          deleteRecord('chat_messages', msg.id);
-                                        });
-                                      }
+                                      deleteChatSession(session.sessionId, session.messages);
                                     }}
                                     className="p-2 rounded-lg bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 hover:bg-red-200 transition-colors ml-auto"
                                   >

@@ -47,14 +47,14 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // Hours & Location
     if (lowerMessage.includes('hour') || lowerMessage.includes('open') || lowerMessage.includes('time') || lowerMessage.includes('when')) {
       return { 
-        text: '⏰ We are open Monday-Saturday from 8:00 AM to 8:00 PM. We are closed on Sundays. For urgent matters outside these hours, please call us at 09167858304.',
+        text: '⏰ We are open Monday-Saturday from 8:00 AM to 8:00 PM. We are closed on Sundays. For urgent matters outside these hours, please call us at 09167858034.',
         suggestions: ['What are your services?', 'How do I book an appointment?', 'Where are you located?']
       };
     }
 
     if (lowerMessage.includes('location') || lowerMessage.includes('address') || lowerMessage.includes('where') || lowerMessage.includes('find')) {
       return { 
-        text: "📍 You can find us at Benbol Pharmacy, Vickie's Plaza, Lekki-Epe Expressway, Sun View 2nd gate Bus stop, Opposite Peace Garden & Crown Estates, Sangotedo, Lagos. Call us at 09167858304 for directions or visit our About page for more details.",
+        text: "📍 You can find us at Benbol Pharmacy, Vickie's Plaza, Lekki-Epe Expressway, Sun View 2nd gate Bus stop, Opposite Peace Garden & Crown Estates, Sangotedo, Lagos. Call us at 09167858034 for directions or visit our About page for more details.",
         links: [{ label: 'Learn More About Us', page: 'about' }],
         suggestions: ['How do I get there?', 'What services do you offer?', 'Can you deliver?']
       };
@@ -62,7 +62,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
 
     if (lowerMessage.includes('phone') || lowerMessage.includes('call') || lowerMessage.includes('contact') || lowerMessage.includes('reach')) {
       return { 
-        text: '📞 You can reach us at 09167858304 during business hours (Monday-Saturday, 8:00 AM - 8:00 PM). We are always happy to help! You can also use our contact form for inquiries.',
+        text: '📞 You can reach us at 09167858034 during business hours (Monday-Saturday, 8:00 AM - 8:00 PM). We are always happy to help! You can also use our contact form for inquiries.',
         links: [{ label: 'Contact Us', page: 'contact' }],
         suggestions: ['What services do you offer?', 'How do I book an appointment?', 'Do you deliver?']
       };
@@ -80,7 +80,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // Prescription Refills
     if (lowerMessage.includes('prescription') || lowerMessage.includes('refill') || lowerMessage.includes('medication') || lowerMessage.includes('drug')) {
       return { 
-        text: '💉 We make prescription refills easy! Here\'s how:\n\n1️⃣ Submit a refill request online through our website\n2️⃣ Call us at 09167858304\n3️⃣ Visit us in person\n\nMost prescriptions are ready within 15-30 minutes. We accept most major insurance plans. Need to submit a refill request now?',
+        text: '💉 We make prescription refills easy! Here\'s how:\n\n1️⃣ Submit a refill request online through our website\n2️⃣ Call us at 09167858034\n3️⃣ Visit us in person\n\nMost prescriptions are ready within 15-30 minutes. We accept most major insurance plans. Need to submit a refill request now?',
         links: [{ label: 'Submit Refill Request', page: 'refill' }],
         suggestions: ['Do you accept insurance?', 'How long does it take?', 'Can you deliver?']
       };
@@ -89,7 +89,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // Insurance
     if (lowerMessage.includes('insurance') || lowerMessage.includes('coverage') || lowerMessage.includes('claim')) {
       return { 
-        text: '🛡️ Yes, we accept most major insurance plans! Here\'s what you need to know:\n\n✓ Bring your insurance card with you\n✓ We will verify your coverage\n✓ We process your claims directly\n✓ Ask our staff about your specific plan\n\nFor questions about your coverage, call us at 09167858304.',
+        text: '🛡️ Yes, we accept most major insurance plans! Here\'s what you need to know:\n\n✓ Bring your insurance card with you\n✓ We will verify your coverage\n✓ We process your claims directly\n✓ Ask our staff about your specific plan\n\nFor questions about your coverage, call us at 09167858034.',
         suggestions: ['How do I submit a prescription?', 'Do you offer home delivery?', 'Can I book a consultation?']
       };
     }
@@ -97,7 +97,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // Delivery
     if (lowerMessage.includes('delivery') || lowerMessage.includes('home delivery') || lowerMessage.includes('ship') || lowerMessage.includes('send')) {
       return { 
-        text: '🚚 Yes, we offer home delivery services within our service area! Here\'s how it works:\n\n✓ Fast and reliable delivery\n✓ Available for medications and health products\n✓ Professional handling and packaging\n✓ Discreet delivery\n\nTo arrange delivery, please call us at 09167858304 or submit your order through our website.',
+        text: '🚚 Yes, we offer home delivery services within our service area! Here\'s how it works:\n\n✓ Fast and reliable delivery\n✓ Available for medications and health products\n✓ Professional handling and packaging\n✓ Discreet delivery\n\nTo arrange delivery, please call us at 09167858034 or submit your order through our website.',
         links: [{ label: 'Submit Refill Request', page: 'refill' }],
         suggestions: ['How long does delivery take?', 'What areas do you deliver to?', 'Can I track my order?']
       };
@@ -106,7 +106,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // Appointments & Consultations
     if (lowerMessage.includes('appointment') || lowerMessage.includes('consultation') || lowerMessage.includes('counselling') || lowerMessage.includes('book') || lowerMessage.includes('schedule')) {
       return { 
-        text: '📅 We offer professional pharmaceutical consultations and health services! You can:\n\n✓ Book a consultation with our experienced pharmacists\n✓ Get medication reviews and advice\n✓ Receive health consultations\n✓ Get personalized recommendations\n\nBook your appointment online or call 09167858304. Our team is ready to help!',
+        text: '📅 We offer professional pharmaceutical consultations and health services! You can:\n\n✓ Book a consultation with our experienced pharmacists\n✓ Get medication reviews and advice\n✓ Receive health consultations\n✓ Get personalized recommendations\n\nBook your appointment online or call 09167858034. Our team is ready to help!',
         links: [{ label: 'Book Appointment', page: 'appointment' }],
         suggestions: ['What services do you offer?', 'How long does a consultation take?', 'What should I bring?']
       };
@@ -115,7 +115,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // What to bring to appointment
     if (lowerMessage.includes('bring') || lowerMessage.includes('what to bring') || lowerMessage.includes('what should i bring') || lowerMessage.includes('prepare') || lowerMessage.includes('preparation')) {
       return { 
-        text: '🎒 Here\'s what to bring to your appointment at Benbol Pharmacy:\n\n📋 Essential Documents:\n✓ Valid ID or passport\n✓ Insurance card (if you have insurance)\n✓ Current medication list (if available)\n✓ Any recent medical records\n\n💊 Medical Information:\n✓ List of allergies\n✓ Current health conditions\n✓ Any questions or concerns\n\n💳 Payment:\n✓ Payment method (cash, card, or insurance)\n\n⏰ Timing:\n✓ Arrive 10-15 minutes early\n✓ We\'re open Monday-Saturday, 8:00 AM - 8:00 PM\n\nIf you have specific questions, call us at 09167858304!',
+        text: '🎒 Here\'s what to bring to your appointment at Benbol Pharmacy:\n\n📋 Essential Documents:\n✓ Valid ID or passport\n✓ Insurance card (if you have insurance)\n✓ Current medication list (if available)\n✓ Any recent medical records\n\n💊 Medical Information:\n✓ List of allergies\n✓ Current health conditions\n✓ Any questions or concerns\n\n💳 Payment:\n✓ Payment method (cash, card, or insurance)\n\n⏰ Timing:\n✓ Arrive 10-15 minutes early\n✓ We\'re open Monday-Saturday, 8:00 AM - 8:00 PM\n\nIf you have specific questions, call us at 09167858034!',
         links: [{ label: 'Book Appointment', page: 'appointment' }],
         suggestions: ['How do I book an appointment?', 'What services do you offer?', 'Do you accept insurance?']
       };
@@ -124,7 +124,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // Vitamins & Supplements
     if (lowerMessage.includes('vitamin') || lowerMessage.includes('supplement') || lowerMessage.includes('multivitamin') || lowerMessage.includes('herbal')) {
       return { 
-        text: '🌿 We carry a wide range of vitamins and supplements including:\n\n✓ Multivitamins for all ages\n✓ Specialty supplements (Omega-3, Vitamin D, etc.)\n✓ Herbal remedies and natural products\n✓ Sports nutrition and performance supplements\n✓ Immune support products\n\nOur pharmacists can help you choose the right supplements for your specific needs. Visit us or call 09167858304 for personalized recommendations!',
+        text: '🌿 We carry a wide range of vitamins and supplements including:\n\n✓ Multivitamins for all ages\n✓ Specialty supplements (Omega-3, Vitamin D, etc.)\n✓ Herbal remedies and natural products\n✓ Sports nutrition and performance supplements\n✓ Immune support products\n\nOur pharmacists can help you choose the right supplements for your specific needs. Visit us or call 09167858034 for personalized recommendations!',
         links: [{ label: 'View Services', page: 'services' }],
         suggestions: ['Do you have immune support products?', 'Can you recommend supplements for me?', 'What about sports nutrition?']
       };
@@ -133,7 +133,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // Skincare
     if (lowerMessage.includes('skincare') || lowerMessage.includes('skin care') || lowerMessage.includes('skin') || lowerMessage.includes('acne') || lowerMessage.includes('moisturizer')) {
       return { 
-        text: '✨ We offer medical-grade skincare products including:\n\n✓ Anti-aging solutions\n✓ Acne treatments and prevention\n✓ Moisturizers and hydration products\n✓ Sun protection (SPF products)\n✓ Specialized treatments\n\nOur staff can provide personalized skincare recommendations based on your skin type and concerns. Visit us or call 09167858304 for a consultation!',
+        text: '✨ We offer medical-grade skincare products including:\n\n✓ Anti-aging solutions\n✓ Acne treatments and prevention\n✓ Moisturizers and hydration products\n✓ Sun protection (SPF products)\n✓ Specialized treatments\n\nOur staff can provide personalized skincare recommendations based on your skin type and concerns. Visit us or call 09167858034 for a consultation!',
         links: [{ label: 'View Services', page: 'services' }],
         suggestions: ['Do you have acne treatments?', 'Can you recommend a moisturizer?', 'What about sun protection?']
       };
@@ -142,7 +142,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // Walking Aids & Mobility
     if (lowerMessage.includes('walking aid') || lowerMessage.includes('mobility') || lowerMessage.includes('wheelchair') || lowerMessage.includes('crutch') || lowerMessage.includes('walker') || lowerMessage.includes('cane')) {
       return { 
-        text: '🚶 We stock a variety of mobility aids and equipment:\n\n✓ Canes and walking sticks\n✓ Crutches (axillary and forearm)\n✓ Walkers and rollators\n✓ Wheelchairs (manual and specialized)\n✓ Other mobility equipment\n\nWe provide professional fitting and consultation to ensure you get the right equipment for your needs. Visit us or call 09167858304 for assistance!',
+        text: '🚶 We stock a variety of mobility aids and equipment:\n\n✓ Canes and walking sticks\n✓ Crutches (axillary and forearm)\n✓ Walkers and rollators\n✓ Wheelchairs (manual and specialized)\n✓ Other mobility equipment\n\nWe provide professional fitting and consultation to ensure you get the right equipment for your needs. Visit us or call 09167858034 for assistance!',
         links: [{ label: 'View Services', page: 'services' }],
         suggestions: ['Do you offer fitting services?', 'What types of wheelchairs do you have?', 'Can you deliver mobility aids?']
       };
@@ -151,7 +151,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // OTC Products
     if (lowerMessage.includes('otc') || lowerMessage.includes('over the counter') || lowerMessage.includes('pain relief') || lowerMessage.includes('cold') || lowerMessage.includes('flu')) {
       return { 
-        text: '💊 We have a full range of over-the-counter (OTC) products:\n\n✓ Pain relievers and fever reducers\n✓ Cold and flu medications\n✓ Allergy relief products\n✓ Digestive aids\n✓ First aid supplies\n✓ And much more!\n\nOur pharmacists can recommend the best OTC product for your symptoms. Visit us or call 09167858304!',
+        text: '💊 We have a full range of over-the-counter (OTC) products:\n\n✓ Pain relievers and fever reducers\n✓ Cold and flu medications\n✓ Allergy relief products\n✓ Digestive aids\n✓ First aid supplies\n✓ And much more!\n\nOur pharmacists can recommend the best OTC product for your symptoms. Visit us or call 09167858034!',
         links: [{ label: 'View Services', page: 'services' }],
         suggestions: ['What do you recommend for a cold?', 'Do you have allergy medication?', 'Can I get pain relief?']
       };
@@ -160,7 +160,7 @@ export default function Chatbot({ onNavigate }: ChatbotProps) {
     // Immunization Services
     if (lowerMessage.includes('immunization') || lowerMessage.includes('vaccine') || lowerMessage.includes('vaccination') || lowerMessage.includes('shot')) {
       return { 
-        text: '💉 We offer professional immunization services! We provide:\n\n✓ Routine vaccinations\n✓ Travel vaccinations\n✓ Seasonal flu shots\n✓ Professional administration\n✓ Vaccination records\n\nOur trained pharmacists administer vaccines safely and professionally. Call us at 09167858304 to schedule your vaccination appointment!',
+        text: '💉 We offer professional immunization services! We provide:\n\n✓ Routine vaccinations\n✓ Travel vaccinations\n✓ Seasonal flu shots\n✓ Professional administration\n✓ Vaccination records\n\nOur trained pharmacists administer vaccines safely and professionally. Call us at 09167858034 to schedule your vaccination appointment!',
         links: [{ label: 'Book Appointment', page: 'appointment' }],
         suggestions: ['What vaccines do you offer?', 'Do I need a travel vaccine?', 'How much does it cost?']
       };

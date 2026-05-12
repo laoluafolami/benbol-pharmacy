@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LogOut, Mail, Plus, Trash2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { signOutAdmin, getCurrentUser, createAdminUser, getAdminUsers, updateAdminRole, deleteAdminUser } from '../lib/auth';
+import { signOutAdmin, getCurrentUser, createAdminUser, updateAdminRole, deleteAdminUser } from '../lib/auth';
 import AdminLogin from './AdminLogin';
 
 interface AdminUser {
@@ -49,12 +49,14 @@ export default function AdminUsersPage({ onNavigateBack }: AdminUsersPageProps) 
         if (adminUserData) {
           setUserRole(adminUserData.role);
         } else {
-          // Default to admin if not found
-          setUserRole('admin');
+          // Default to viewer if not found (for security)
+          console.warn('User not found in admin_users table, defaulting to viewer');
+          setUserRole('viewer');
         }
       } catch (err) {
         console.error('Error fetching user role:', err);
-        setUserRole('admin');
+        // Default to viewer for security
+        setUserRole('viewer');
       }
       
       fetchAdminUsers();
